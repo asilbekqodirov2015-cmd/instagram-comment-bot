@@ -1,0 +1,38 @@
+[
+  {
+    "id": "mt5klv915079l",
+    "timestamp": "2026-08-23T08:54:01.333Z",
+    "commenterUsername": "instatester",
+    "commenterId": "mock_commenter_id_999",
+    "commentText": "Menga narxi va batafsil ma'lumot bering",
+    "commentId": "mock_comment_id_6o2rwagbw",
+    "mediaId": "mock_media_id_555",
+    "replyStatus": "failed",
+    "dmStatus": "failed",
+    "error": "Meta Access Token kiritilmagan. Panel orqali sozlang."
+  },
+  {
+    "id": "mt5kjt36g0nbu",
+    "timestamp": "2026-08-23T08:52:25.218Z",
+    "commenterUsername": "dev_tester",
+    "commenterId": "mock_user_123",
+    "commentText": "Bu nechpul turadi?",
+    "commentId": "mock_comment_o0zx2znh3",
+    "mediaId": "mock_media_reel_789",
+    "replyStatus": "failed",
+    "dmStatus": "failed",
+    "error": "Meta Access Token kiritilmagan. Panel orqali sozlang."
+  },
+  {
+    "id": "mt5kjbznbgfv8",
+    "timestamp": "2026-08-23T08:52:03.059Z",
+    "commenterUsername": "dev_tester",
+    "commenterId": "mock_user_123",
+    "commentText": "Assalomu alaykum! Narxi qancha ekan?",
+    "commentId": "mock_comment_s0gcfsdwb",
+    "mediaId": "mock_media_reel_789",
+    "replyStatus": "failed",
+    "dmStatus": "failed",
+    "error": "Meta Access Token kiritilmagan. Panel orqali sozlang."
+  }
+]
