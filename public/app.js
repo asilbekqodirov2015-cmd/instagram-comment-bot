@@ -1,5 +1,6 @@
 // State Management
 let activeKeywords = [];
+let allLogs = [];
 
 // DOM Elements
 const configForm = document.getElementById('configForm');
@@ -7,7 +8,6 @@ const triggerTypeRadios = document.getElementsByName('triggerType');
 const keywordsContainer = document.getElementById('keywordsContainer');
 const keywordsInput = document.getElementById('keywordsInput');
 const keywordsBadges = document.getElementById('keywordsBadges');
-const commentReplyText = document.getElementById('commentReplyText');
 
 const dmTypeSelect = document.getElementById('dmType');
 const mediaUrlContainer = document.getElementById('mediaUrlContainer');
@@ -19,6 +19,8 @@ const pageAccessToken = document.getElementById('pageAccessToken');
 const verifyToken = document.getElementById('verifyToken');
 
 const logsTableBody = document.getElementById('logsTableBody');
+const logsSearchInput = document.getElementById('logsSearchInput');
+const logsStatusFilter = document.getElementById('logsStatusFilter');
 const clearLogsBtn = document.getElementById('clearLogsBtn');
 
 const testUsername = document.getElementById('testUsername');
@@ -26,13 +28,37 @@ const testComment = document.getElementById('testComment');
 const triggerTestBtn = document.getElementById('triggerTestBtn');
 const testResultAlert = document.getElementById('testResultAlert');
 
+// Dynamic Inputs Elements
+const replyVariantsContainer = document.getElementById('replyVariantsContainer');
+const addReplyVariantBtn = document.getElementById('addReplyVariantBtn');
+
+// Live Preview Elements
+const tabBtnComments = document.getElementById('tabBtnComments');
+const tabBtnDirect = document.getElementById('tabBtnDirect');
+const mockViewComments = document.getElementById('mockViewComments');
+const mockViewDirect = document.getElementById('mockViewDirect');
+const mockReplyTextBubble = document.getElementById('mockReplyTextBubble');
+const mockCommentReplyItem = document.getElementById('mockCommentReplyItem');
+const mockDmMediaBubble = document.getElementById('mockDmMediaBubble');
+const mockDmMediaPreview = document.getElementById('mockDmMediaPreview');
+const mockDmTextBubble = document.getElementById('mockDmTextBubble');
+const mockDmTextContent = document.getElementById('mockDmTextContent');
+
 // Initialize Dashboard
 document.addEventListener('DOMContentLoaded', () => {
+  // Load Theme Preference
+  initTheme();
+
+  // Load Initial Configurations and logs
   loadConfig();
   loadLogs();
+  loadStats();
   
-  // Start polling logs every 4 seconds
-  setInterval(loadLogs, 4000);
+  // Start polling logs and stats every 4 seconds
+  setInterval(() => {
+    loadLogs();
+    loadStats();
+  }, 4000);
   
   // Event Listeners for trigger type toggle
   triggerTypeRadios.forEach(radio => {
@@ -40,11 +66,32 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // Event Listener for DM type toggle
-  dmTypeSelect.addEventListener('change', toggleDmFieldsVisibility);
+  dmTypeSelect.addEventListener('change', () => {
+    toggleDmFieldsVisibility();
+    updateLivePreview();
+  });
+  
+  // Live Preview input syncs
+  dmText.addEventListener('input', updateLivePreview);
+  dmMediaUrl.addEventListener('input', updateLivePreview);
   
   // Keyword badge inputs
   keywordsInput.addEventListener('keydown', handleKeywordInput);
   keywordsInput.addEventListener('blur', addKeywordFromInput);
+  
+  // Dynamic Reply add button
+  addReplyVariantBtn.addEventListener('click', () => {
+    addReplyInput('');
+    updateLivePreview();
+  });
+
+  // Preview Tabs Switcher
+  tabBtnComments.addEventListener('click', () => switchPreviewTab('comments'));
+  tabBtnDirect.addEventListener('click', () => switchPreviewTab('direct'));
+
+  // Log Search and Filter Event Listeners
+  logsSearchInput.addEventListener('input', filterAndRenderLogs);
+  logsStatusFilter.addEventListener('change', filterAndRenderLogs);
   
   // Form submission
   configForm.addEventListener('submit', saveConfig);
@@ -56,6 +103,146 @@ document.addEventListener('DOMContentLoaded', () => {
   triggerTestBtn.addEventListener('click', runWebhookTest);
 });
 
+// --- THEME MANAGEMENT ---
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'theme-sunset';
+  document.body.className = savedTheme;
+  
+  // Mark active theme button
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('data-theme') === savedTheme) {
+      btn.classList.add('active');
+    }
+    
+    // Bind click listener
+    btn.addEventListener('click', (e) => {
+      const selectedTheme = e.target.getAttribute('data-theme');
+      document.body.className = selectedTheme;
+      localStorage.setItem('theme', selectedTheme);
+      
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+    });
+  });
+}
+
+// --- DYNAMIC REPLY INPUTS ---
+function addReplyInput(text = '') {
+  const row = document.createElement('div');
+  row.className = 'reply-variant-row';
+  
+  row.innerHTML = `
+    <input type="text" class="reply-input" placeholder="Javob matni varianti..." value="${escapeHtml(text)}" required>
+    <button type="button" class="btn-remove-variant" title="O'chirish">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  `;
+  
+  // Bind change events to sync preview dynamically
+  const input = row.querySelector('.reply-input');
+  input.addEventListener('input', updateLivePreview);
+  
+  // Bind remove button
+  row.querySelector('.btn-remove-variant').addEventListener('click', () => {
+    row.remove();
+    updateLivePreview();
+  });
+  
+  replyVariantsContainer.appendChild(row);
+}
+
+function getReplyVariants() {
+  const inputs = replyVariantsContainer.querySelectorAll('.reply-input');
+  return Array.from(inputs).map(inp => inp.value.trim()).filter(val => val.length > 0);
+}
+
+// --- LIVE PREVIEW RENDERING ---
+function switchPreviewTab(tab) {
+  if (tab === 'comments') {
+    tabBtnComments.classList.add('active');
+    tabBtnDirect.classList.remove('active');
+    mockViewComments.classList.add('active');
+    mockViewDirect.classList.remove('active');
+  } else {
+    tabBtnComments.classList.remove('active');
+    tabBtnDirect.classList.add('active');
+    mockViewComments.classList.remove('active');
+    mockViewDirect.classList.add('active');
+  }
+}
+
+function updateLivePreview() {
+  // 1. Comment Reply Preview
+  const variants = getReplyVariants();
+  const firstVariant = variants.length > 0 ? variants[0] : 'Javobingizni lizingizga (DM) yubordik! 📩';
+  mockReplyTextBubble.textContent = firstVariant;
+
+  // Add a slight pop animation when preview text changes
+  mockCommentReplyItem.style.animation = 'none';
+  // Trigger reflow
+  void mockCommentReplyItem.offsetWidth;
+  mockCommentReplyItem.style.animation = 'replyPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+
+  // 2. DM Preview
+  const type = dmTypeSelect.value;
+  const textValue = dmText.value.trim() || "Salom! So'ragan ma'lumotingiz yuborildi.";
+  const mediaUrlValue = dmMediaUrl.value.trim();
+
+  // Reset displays
+  mockDmMediaBubble.style.display = 'none';
+  mockDmTextBubble.style.display = 'none';
+
+  if (type === 'text') {
+    mockDmTextBubble.style.display = 'flex';
+    mockDmTextContent.textContent = textValue;
+  } else if (type === 'image') {
+    mockDmMediaBubble.style.display = 'flex';
+    renderMediaPreview('image', mediaUrlValue);
+  } else if (type === 'video') {
+    mockDmMediaBubble.style.display = 'flex';
+    renderMediaPreview('video', mediaUrlValue);
+  } else if (type === 'text_image') {
+    mockDmMediaBubble.style.display = 'flex';
+    mockDmTextBubble.style.display = 'flex';
+    renderMediaPreview('image', mediaUrlValue);
+    mockDmTextContent.textContent = textValue;
+  } else if (type === 'text_video') {
+    mockDmMediaBubble.style.display = 'flex';
+    mockDmTextBubble.style.display = 'flex';
+    renderMediaPreview('video', mediaUrlValue);
+    mockDmTextContent.textContent = textValue;
+  }
+}
+
+function renderMediaPreview(type, url) {
+  if (!url) {
+    mockDmMediaPreview.innerHTML = `
+      <div class="media-placeholder-icon">
+        <i class="fa-regular fa-${type === 'image' ? 'image' : 'file-video'}"></i>
+      </div>
+    `;
+    return;
+  }
+
+  if (type === 'image') {
+    mockDmMediaPreview.innerHTML = `<img src="${escapeHtml(url)}" onerror="handleMediaError(this, 'image')">`;
+  } else {
+    mockDmMediaPreview.innerHTML = `<video src="${escapeHtml(url)}" muted loop autoplay playsinline onerror="handleMediaError(this, 'video')"></video>`;
+  }
+}
+
+function handleMediaError(element, type) {
+  element.style.display = 'none';
+  element.parentNode.innerHTML = `
+    <div class="media-placeholder-icon" style="color: var(--danger);">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+  `;
+}
+
+// --- CONFIGURATION LOGIC ---
+
 // Load config from server
 async function loadConfig() {
   try {
@@ -65,7 +252,6 @@ async function loadConfig() {
     // Set fields
     pageAccessToken.value = config.pageAccessToken || '';
     verifyToken.value = config.verifyToken || '';
-    commentReplyText.value = config.commentReplyText || '';
     
     // Set trigger type
     const triggerVal = config.triggerType || 'all';
@@ -76,14 +262,22 @@ async function loadConfig() {
     renderKeywordBadges();
     toggleKeywordsVisibility();
     
+    // Load reply variants
+    replyVariantsContainer.innerHTML = '';
+    const replies = config.commentReplies || [config.commentReplyText || 'Javobingizni lizingizga (DM) yubordik! 📩'];
+    replies.forEach(rep => addReplyInput(rep));
+    
     // Set DM settings
     dmTypeSelect.value = config.dmType || 'text';
     dmText.value = config.dmText || '';
     dmMediaUrl.value = config.dmMediaUrl || '';
     toggleDmFieldsVisibility();
+
+    // Trigger Initial Preview Draw
+    updateLivePreview();
     
   } catch (error) {
-    console.error('Xatolik yuz berdi:', error);
+    console.error('Error loading config:', error);
     showNotification('Sozlamalarni yuklashda xatolik yuz berdi.', 'error');
   }
 }
@@ -93,13 +287,15 @@ async function saveConfig(e) {
   e.preventDefault();
   
   const triggerType = document.querySelector('input[name="triggerType"]:checked').value;
+  const commentReplies = getReplyVariants();
   
   const payload = {
     pageAccessToken: pageAccessToken.value.trim(),
     verifyToken: verifyToken.value.trim(),
     triggerType,
     keywords: activeKeywords,
-    commentReplyText: commentReplyText.value,
+    commentReplyText: commentReplies.length > 0 ? commentReplies[0] : 'Javobingizni lizingizga (DM) yubordik! 📩',
+    commentReplies,
     dmType: dmTypeSelect.value,
     dmText: dmText.value,
     dmMediaUrl: dmMediaUrl.value.trim()
@@ -115,6 +311,7 @@ async function saveConfig(e) {
     
     if (result.success) {
       showNotification('Sozlamalar muvaffaqiyatli saqlandi! ✔️', 'success');
+      loadStats();
     } else {
       showNotification('Xatolik: ' + result.message, 'error');
     }
@@ -123,30 +320,96 @@ async function saveConfig(e) {
   }
 }
 
+// --- STATS LOGIC ---
+async function loadStats() {
+  try {
+    const response = await fetch('/api/stats');
+    const stats = await response.json();
+    
+    // Update dashboard numbers
+    updateStatsCounter('statTotal', stats.totalComments);
+    updateStatsCounter('statReplies', stats.successReplies);
+    updateStatsCounter('statDMs', stats.successDMs);
+    updateStatsCounter('statFailed', stats.failedCount);
+  } catch (error) {
+    console.error('Error loading stats:', error);
+  }
+}
+
+function updateStatsCounter(elementId, targetValue) {
+  const el = document.getElementById(elementId);
+  const startVal = parseInt(el.textContent) || 0;
+  if (startVal === targetValue) return;
+
+  // Small increment animation
+  const duration = 800; // ms
+  const startTime = performance.now();
+
+  function animate(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Easing formula
+    const easeProgress = progress * (2 - progress);
+    const currentVal = Math.floor(startVal + (targetValue - startVal) * easeProgress);
+    
+    el.textContent = currentVal;
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      el.textContent = targetValue;
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+// --- LOGGING AND FILTERING LOGIC ---
+
 // Load logs from server
 async function loadLogs() {
   try {
     const response = await fetch('/api/logs');
-    const logs = await response.json();
+    allLogs = await response.json();
     
-    renderLogs(logs);
+    filterAndRenderLogs();
   } catch (error) {
     console.error('Error fetching logs:', error);
   }
 }
 
-// Render logs table
-function renderLogs(logs) {
-  if (!logs || logs.length === 0) {
+// Filter and render logs table
+function filterAndRenderLogs() {
+  const searchText = logsSearchInput.value.trim().toLowerCase();
+  const statusFilter = logsStatusFilter.value;
+  
+  const filtered = allLogs.filter(log => {
+    // 1. Search Query filter (matches username or comment text)
+    const matchesSearch = 
+      log.commenterUsername.toLowerCase().includes(searchText) || 
+      log.commentText.toLowerCase().includes(searchText);
+      
+    // 2. Status Select filter
+    let matchesStatus = true;
+    if (statusFilter === 'success') {
+      matchesStatus = log.replyStatus === 'success' && log.dmStatus === 'success';
+    } else if (statusFilter === 'failed') {
+      matchesStatus = log.replyStatus === 'failed' || log.dmStatus === 'failed';
+    }
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  if (filtered.length === 0) {
     logsTableBody.innerHTML = `
       <tr class="empty-row">
-        <td colspan="6">Hozircha faollik tarixi bo'sh.</td>
+        <td colspan="6">Saralash shartlariga mos faollik tarixi topilmadi.</td>
       </tr>
     `;
     return;
   }
   
-  logsTableBody.innerHTML = logs.map(log => {
+  logsTableBody.innerHTML = filtered.map(log => {
     const timeStr = formatTimestamp(log.timestamp);
     const replyClass = log.replyStatus === 'success' ? 'success' : (log.replyStatus === 'failed' ? 'failed' : 'skipped');
     const dmClass = log.dmStatus === 'success' ? 'success' : (log.dmStatus === 'failed' ? 'failed' : 'pending');
@@ -184,6 +447,7 @@ async function clearLogs() {
     const result = await response.json();
     if (result.success) {
       loadLogs();
+      loadStats();
       showNotification('Jurnallar tozalandi.', 'success');
     }
   } catch (error) {
@@ -237,6 +501,7 @@ async function runWebhookTest() {
       testResultAlert.className = 'alert-box success';
       testResultAlert.innerHTML = `<strong>Muvaffaqiyatli:</strong> Test xabari yuborildi! Sahifani tekshiring, jurnalda yangi yozuv paydo bo'lishi kerak.`;
       loadLogs();
+      loadStats();
     } else {
       testResultAlert.style.display = 'block';
       testResultAlert.className = 'alert-box error';
@@ -250,7 +515,6 @@ async function runWebhookTest() {
     triggerTestBtn.disabled = false;
     triggerTestBtn.innerHTML = '<i class="fa-solid fa-play"></i> Testni Ishga Tushirish';
     
-    // Hide alert after 8 seconds
     setTimeout(() => {
       testResultAlert.style.display = 'none';
     }, 8000);
@@ -296,7 +560,6 @@ function addKeywordFromInput() {
   const val = keywordsInput.value.trim();
   if (!val) return;
   
-  // Split on commas in case user pasted values
   const tags = val.split(',').map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
   
   tags.forEach(tag => {
@@ -353,7 +616,6 @@ function formatTimestamp(isoString) {
 
 // Helper show custom alert notification
 function showNotification(message, type) {
-  // Create notification alert banner dynamically at top of screen
   const toast = document.createElement('div');
   toast.className = `alert-box ${type}`;
   toast.style.position = 'fixed';
@@ -368,7 +630,6 @@ function showNotification(message, type) {
   const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
   toast.innerHTML = `<i class="fa-solid ${icon}"></i> &nbsp; ${message}`;
   
-  // Add animation keyframes if not exist
   if (!document.getElementById('toast-styles')) {
     const styleSheet = document.createElement('style');
     styleSheet.id = 'toast-styles';
@@ -393,4 +654,16 @@ function showNotification(message, type) {
       toast.remove();
     }, 280);
   }, 4000);
+}
+
+// Helper escape HTML strings
+function escapeHtml(string) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(string).replace(/[&<>"']/g, function(m) { return map[m]; });
 }

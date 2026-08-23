@@ -1,5 +1,17 @@
 [
   {
+    "id": "mt63hd4zd30vz",
+    "timestamp": "2026-08-23T17:42:23.937Z",
+    "commenterUsername": "dev_tester",
+    "commenterId": "mock_user_123",
+    "commentText": "Assalomu alaykum! Narxi qancha ekan?",
+    "commentId": "mock_comment_bwdx3gako",
+    "mediaId": "mock_media_reel_789",
+    "replyStatus": "failed",
+    "dmStatus": "failed",
+    "error": "Meta Access Token kiritilmagan. Panel orqali sozlang."
+  },
+  {
     "id": "mt5klv915079l",
     "timestamp": "2026-08-23T08:54:01.333Z",
     "commenterUsername": "instatester",

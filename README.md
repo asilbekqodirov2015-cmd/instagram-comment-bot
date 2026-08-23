@@ -153,3 +153,29 @@ Tizimda **Direct (DM)** orqali yuboriladigan xabarlarni juda moslashuvchan shakl
 5. **Video + Matn (Video + Text)**: Avval video yuboriladi, uning ketidan matnli xabar yuboriladi.
 
 > 💡 **Muhim eslatma:** Rasm yoki video havolasi Meta serverlari o'qiy olishi uchun internetda ochiq holda bo'lishi va to'g'ridan-to'g'ri faylning o'ziga olib borishi shart (`.jpg`, `.png`, `.mp4` va h.k.).
+
+---
+
+## 💾 Bulutli Ma'lumotlar Bazasi (MongoDB) - Sozlamalarni Abadiy Saqlash
+
+Render.com serverining bepul tarifida fayllar vaqtinchalik bo'lgani sababli, server o'chib yonganda (yoki uyquga ketib uyg'onganda) siz admin panelda saqlagan token va xabarlar o'chib ketishi mumkin. 
+
+Buni oldini olish va sozlamalarni hamda barcha faollik tarixini (logs) **abadiy saqlab qolish** uchun bulutli **MongoDB Atlas** ma'lumotlar bazasini ulab qo'yamiz:
+
+### 1-qadam: Tekin MongoDB bazasini ochish
+1. [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) saytidan ro'yxatdan o'ting.
+2. Bepul **Shared (M0)** klasterini yarating (Region sifatida o'zingizga yaqinroq, masalan Frankfurtni tanlang).
+3. **Database Access** bo'limida yangi foydalanuvchi yarating (Username va Password yozib oling).
+4. **Network Access** bo'limida IP manzillar ro'yxatiga `0.0.0.0/0` (barcha joydan ulanish) ni qo'shing.
+5. **Database** bo'limiga kirib, **Connect** -> **Drivers** tugmasini bosing va sizga berilgan ulanish havolasini (Connection String) nusxalab oling. U quyidagicha ko'rinishda bo'ladi:
+   `mongodb+srv://<username>:<password>@cluster0.xxxx.mongodb.net/?retryWrites=true&w=majority`
+
+### 2-qadam: Render.com-ga bazani ulash
+1. Render.com boshqaruv paneliga kiring va loyihangizni oching.
+2. **Environment Variables** (muhit o'zgaruvchilari) bo'limiga yangi o'zgaruvchi qo'shing:
+   * **Key**: `MONGODB_URI`
+   * **Value**: O'zingizning MongoDB ulanish havolangiz (username va password qismlarini o'z parolingiz bilan almashtiring).
+3. O'zgarishlarni saqlang (Save Changes).
+
+Render serverni avtomatik ravishda qayta yuklaydi va botingiz MongoDB bazasiga ulanadi. Endi sozlamalaringiz va faollik jurnallari mutlaqo xavfsiz va abadiy saqlanadi!
+

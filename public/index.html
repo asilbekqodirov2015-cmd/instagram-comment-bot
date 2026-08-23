@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instagram AutoResponder - Admin Panel</title>
+  <title>Instagram AutoResponder - Premium Admin Panel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="theme-sunset">
   <div class="glass-bg"></div>
   <div class="app-container">
     
@@ -21,16 +21,58 @@
           <i class="fa-brands fa-instagram"></i>
         </div>
         <div class="logo-text">
-          <h1>InstaResponse</h1>
+          <h1>InstaResponse <span class="premium-badge">PRO</span></h1>
           <span class="subtext">Auto-Reply & DM System</span>
         </div>
       </div>
       
-      <div class="status-indicator">
-        <div class="pulse-dot"></div>
-        <span class="status-label">Tizim Faol</span>
+      <!-- Theme Switcher and Status -->
+      <div class="header-controls">
+        <div class="theme-switcher">
+          <span class="control-label">Dizayn:</span>
+          <button class="theme-btn sunset active" data-theme="theme-sunset" title="Sunset Orange"></button>
+          <button class="theme-btn midnight" data-theme="theme-midnight" title="Midnight Cyan"></button>
+          <button class="theme-btn cyberpunk" data-theme="theme-cyberpunk" title="Cyberpunk Green"></button>
+        </div>
+        <div class="status-separator"></div>
+        <div class="status-indicator">
+          <div class="pulse-dot"></div>
+          <span class="status-label">Tizim Faol</span>
+        </div>
       </div>
     </header>
+
+    <!-- Stats Dashboard Row -->
+    <section class="stats-row">
+      <div class="stats-card total">
+        <div class="stats-icon"><i class="fa-solid fa-comment-dots"></i></div>
+        <div class="stats-info">
+          <h3>Jami Kommentlar</h3>
+          <span class="stats-number" id="statTotal">0</span>
+        </div>
+      </div>
+      <div class="stats-card replies">
+        <div class="stats-icon"><i class="fa-solid fa-reply-all"></i></div>
+        <div class="stats-info">
+          <h3>Javob Qaytarilgan</h3>
+          <span class="stats-number" id="statReplies">0</span>
+        </div>
+      </div>
+      <div class="stats-card dms">
+        <div class="stats-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <div class="stats-info">
+          <h3>DM yuborilgan</h3>
+          <span class="stats-number" id="statDMs">0</span>
+        </div>
+      </div>
+      <div class="stats-card failed">
+        <div class="stats-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stats-info">
+          <h3>Xatoliklar</h3>
+          <span class="stats-number" id="statFailed">0</span>
+        </div>
+      </div>
+    </section>
 
     <!-- Main Content Grid -->
     <main class="dashboard-grid">
@@ -108,9 +150,18 @@
                 <div id="keywordsBadges" class="badges-container"></div>
               </div>
 
+              <!-- Premium Feature: Random Multiple Replies -->
               <div class="form-group">
-                <label for="commentReplyText">Kommentga yoziladigan javob</label>
-                <textarea id="commentReplyText" name="commentReplyText" rows="3" placeholder="Kommentga qanday javob qaytarilsin? E.g. Lichkangizga yubordik! 📩" required></textarea>
+                <div class="label-with-action">
+                  <label>Kommentga yoziladigan javob variantlari</label>
+                  <button type="button" class="btn-link" id="addReplyVariantBtn">
+                    <i class="fa-solid fa-plus"></i> Variant qo'shish
+                  </button>
+                </div>
+                <p class="input-hint">Meta spam-bloklaridan saqlanish uchun tizim har bir kommentariyaga quyidagi javoblardan birini tasodifiy (random) tanlab yuboradi.</p>
+                <div id="replyVariantsContainer" class="dynamic-inputs-list">
+                  <!-- Dynamic reply text inputs added here -->
+                </div>
               </div>
             </div>
           </div>
@@ -144,7 +195,7 @@
                   <i class="fa-solid fa-link input-icon"></i>
                   <input type="url" id="dmMediaUrl" name="dmMediaUrl" placeholder="https://misol.com/rasm.jpg">
                 </div>
-                <p class="input-hint">Rasm/video ochiq internetda va to'g'ridan-to'g'ri havola shaklida bo'lishi kerak.</p>
+                <p class="input-hint">Rasm/video ochiq internetda va to'g'ridan-to'g'ri faylning o'ziga olib borishi shart.</p>
               </div>
 
               <!-- Conditional DM Text Input -->
@@ -164,9 +215,140 @@
         </form>
       </section>
 
-      <!-- Right Column: Logs & Testing -->
+      <!-- Right Column: Live Preview & Logs -->
       <section class="logs-column">
         
+        <!-- Premium Feature: Live Instagram Preview Mockup -->
+        <div class="glass-card preview-card">
+          <div class="card-header">
+            <i class="fa-solid fa-mobile-screen-button header-icon"></i>
+            <h2>Instagram Live Preview (Jonli Ko'rinish)</h2>
+            <div class="preview-tabs">
+              <button type="button" class="preview-tab-btn active" id="tabBtnComments">Kommentlar</button>
+              <button type="button" class="preview-tab-btn" id="tabBtnDirect">Direct (DM)</button>
+            </div>
+          </div>
+          
+          <div class="card-body preview-body">
+            
+            <!-- Phone Frame -->
+            <div class="phone-mockup">
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>9:41</span>
+                  <div class="phone-status-icons">
+                    <i class="fa-solid fa-signal"></i>
+                    <i class="fa-solid fa-wifi"></i>
+                    <i class="fa-solid fa-battery-three-quarters"></i>
+                  </div>
+                </div>
+                
+                <!-- Instagram Mockup Header -->
+                <div class="insta-mock-header">
+                  <div class="insta-mock-profile">
+                    <div class="mock-avatar-gradient">
+                      <div class="mock-avatar">
+                        <i class="fa-solid fa-user"></i>
+                      </div>
+                    </div>
+                    <div class="mock-header-text">
+                      <span class="mock-username">sizning_sahifangiz</span>
+                      <span class="mock-location">Reel / Video</span>
+                    </div>
+                  </div>
+                  <i class="fa-solid fa-ellipsis"></i>
+                </div>
+                
+                <!-- Instagram Comment Tab View -->
+                <div class="insta-mock-view active" id="mockViewComments">
+                  <div class="mock-scroll-area">
+                    <!-- Post Description -->
+                    <div class="mock-comment-item">
+                      <div class="mock-user-avatar owner">S</div>
+                      <div class="mock-comment-text">
+                        <strong>sizning_sahifangiz</strong> Mana o'sha yangi mahsulotimiz! Fikrlaringizni kommentda qoldiring...
+                      </div>
+                    </div>
+                    
+                    <div class="mock-divider">Barcha kommentariyalar</div>
+                    
+                    <!-- Commenter comment -->
+                    <div class="mock-comment-item">
+                      <div class="mock-user-avatar commenter">U</div>
+                      <div class="mock-comment-text">
+                        <strong>instatester</strong> <span class="comment-trigger-highlight">narxi qancha?</span> batafsil yuboring.
+                      </div>
+                    </div>
+                    
+                    <!-- Bot Reply comment -->
+                    <div class="mock-comment-item reply-animation" id="mockCommentReplyItem">
+                      <div class="mock-user-avatar owner">S</div>
+                      <div class="mock-comment-text">
+                        <strong>sizning_sahifangiz</strong> <span id="mockReplyTextBubble">Javobingizni lizingizga (DM) yubordik! 📩</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mock-input-area">
+                    <div class="mock-user-avatar owner sm">S</div>
+                    <div class="mock-input-placeholder">Kommentariya qoldiring...</div>
+                  </div>
+                </div>
+
+                <!-- Instagram DM Tab View -->
+                <div class="insta-mock-view" id="mockViewDirect">
+                  <div class="insta-dm-header">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <div class="dm-header-info">
+                      <div class="mock-user-avatar commenter sm">U</div>
+                      <strong>instatester</strong>
+                    </div>
+                    <div class="dm-header-actions">
+                      <i class="fa-solid fa-phone"></i>
+                      <i class="fa-solid fa-video"></i>
+                    </div>
+                  </div>
+                  
+                  <div class="mock-scroll-area dm-chat-area">
+                    <div class="chat-time">Bugun, 9:41</div>
+                    
+                    <!-- Commenter initial comment note -->
+                    <div class="chat-system-note">Kommentariya uchun Direct-javob: "narxi qancha?"</div>
+                    
+                    <!-- Bot media message (conditionally visible) -->
+                    <div class="chat-bubble-container bot-message" id="mockDmMediaBubble" style="display: none;">
+                      <div class="mock-user-avatar owner xs">S</div>
+                      <div class="chat-media-wrapper">
+                        <div class="chat-media-preview" id="mockDmMediaPreview">
+                          <!-- Image/Video goes here -->
+                          <div class="media-placeholder-icon"><i class="fa-regular fa-image"></i></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Bot text message (conditionally visible) -->
+                    <div class="chat-bubble-container bot-message" id="mockDmTextBubble">
+                      <div class="mock-user-avatar owner xs">S</div>
+                      <div class="chat-bubble" id="mockDmTextContent">
+                        Salom! Bizga kommentariya qoldirganingiz uchun rahmat. Siz so'ragan ma'lumotlar shu yerda.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mock-dm-input-area">
+                    <i class="fa-solid fa-camera"></i>
+                    <div class="mock-dm-input-placeholder">Xabar yuborish...</div>
+                    <i class="fa-regular fa-face-smile"></i>
+                    <i class="fa-regular fa-image"></i>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <!-- Live Logger -->
         <div class="glass-card log-card">
           <div class="card-header log-header">
@@ -174,7 +356,19 @@
               <i class="fa-solid fa-list-check header-icon"></i>
               <h2>Faollik Tarixi (Activity Log)</h2>
             </div>
-            <div class="header-right">
+            <!-- Filtering UI -->
+            <div class="header-right logs-controls">
+              <div class="logs-filter-group">
+                <input type="text" id="logsSearchInput" placeholder="User qidirish..." class="logs-search-input">
+                <div class="select-wrapper sm">
+                  <select id="logsStatusFilter" class="logs-filter-select">
+                    <option value="all">Hammasi</option>
+                    <option value="success">Muvaffaqiyatli</option>
+                    <option value="failed">Xatolik bor</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
               <button type="button" class="btn btn-secondary btn-small" id="clearLogsBtn">
                 <i class="fa-solid fa-trash-can"></i> Tozalash
               </button>
@@ -195,7 +389,6 @@
                   </tr>
                 </thead>
                 <tbody id="logsTableBody">
-                  <!-- Dynamic logs injected here -->
                   <tr class="empty-row">
                     <td colspan="6">Hozircha faollik yo'q.</td>
                   </tr>
