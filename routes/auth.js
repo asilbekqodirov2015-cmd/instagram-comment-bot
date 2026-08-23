@@ -1,11 +1,23 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Config = require('../models/Config');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'instagram_saas_jwt_secret_key_2026';
+
+// Middleware to check database connection state
+router.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message: "Bulutli ma'lumotlar bazasi (MongoDB) ulanmagan. Iltimos, Render.com panelidagi Environment Variables bo'limiga MONGODB_URI kaliti orqali ulanish havolasini kiritib qo'ying!"
+    });
+  }
+  next();
+});
 
 // Register Route
 router.post('/register', async (req, res) => {
