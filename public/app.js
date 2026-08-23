@@ -2,6 +2,41 @@
 let activeKeywords = [];
 let allLogs = [];
 
+// Check Authentication
+const token = localStorage.getItem('jwtToken');
+if (!token) {
+  window.location.href = 'login.html';
+}
+
+// Helper: Authenticated Fetch Wrapper
+async function authenticatedFetch(url, options = {}) {
+  const jwtToken = localStorage.getItem('jwtToken');
+  if (!jwtToken) {
+    window.location.href = 'login.html';
+    return Promise.reject('Token topilmadi');
+  }
+
+  options.headers = {
+    ...options.headers,
+    'Authorization': `Bearer ${jwtToken}`
+  };
+
+  try {
+    const response = await fetch(url, options);
+    if (response.status === 401) {
+      // Session expired or unauthorized
+      localStorage.removeItem('jwtToken');
+      localStorage.removeItem('userEmail');
+      window.location.href = 'login.html';
+      throw new Error('Seans muddati tugagan. Qaytadan kiring.');
+    }
+    return response;
+  } catch (err) {
+    console.error(`Fetch error on ${url}:`, err.message);
+    throw err;
+  }
+}
+
 // DOM Elements
 const configForm = document.getElementById('configForm');
 const triggerTypeRadios = document.getElementsByName('triggerType');
@@ -17,6 +52,7 @@ const dmText = document.getElementById('dmText');
 
 const pageAccessToken = document.getElementById('pageAccessToken');
 const verifyToken = document.getElementById('verifyToken');
+const facebookPageId = document.getElementById('facebookPageId'); // Page ID element
 
 const logsTableBody = document.getElementById('logsTableBody');
 const logsSearchInput = document.getElementById('logsSearchInput');
@@ -44,8 +80,27 @@ const mockDmMediaPreview = document.getElementById('mockDmMediaPreview');
 const mockDmTextBubble = document.getElementById('mockDmTextBubble');
 const mockDmTextContent = document.getElementById('mockDmTextContent');
 
+// Auth elements
+const userEmailDisplay = document.getElementById('userEmailDisplay');
+const logoutBtn = document.getElementById('logoutBtn');
+
 // Initialize Dashboard
 document.addEventListener('DOMContentLoaded', () => {
+  // Display User Email
+  const userEmail = localStorage.getItem('userEmail');
+  if (userEmailDisplay) {
+    userEmailDisplay.textContent = userEmail || 'Foydalanuvchi';
+  }
+
+  // Bind Logout Button
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('jwtToken');
+      localStorage.removeItem('userEmail');
+      window.location.href = 'login.html';
+    });
+  }
+
   // Load Theme Preference
   initTheme();
 
@@ -246,10 +301,11 @@ function handleMediaError(element, type) {
 // Load config from server
 async function loadConfig() {
   try {
-    const response = await fetch('/api/config');
+    const response = await authenticatedFetch('/api/config');
     const config = await response.json();
     
     // Set fields
+    facebookPageId.value = config.facebookPageId || '';
     pageAccessToken.value = config.pageAccessToken || '';
     verifyToken.value = config.verifyToken || '';
     
@@ -290,6 +346,7 @@ async function saveConfig(e) {
   const commentReplies = getReplyVariants();
   
   const payload = {
+    facebookPageId: facebookPageId.value.trim(),
     pageAccessToken: pageAccessToken.value.trim(),
     verifyToken: verifyToken.value.trim(),
     triggerType,
@@ -302,7 +359,7 @@ async function saveConfig(e) {
   };
   
   try {
-    const response = await fetch('/api/config', {
+    const response = await authenticatedFetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -323,7 +380,7 @@ async function saveConfig(e) {
 // --- STATS LOGIC ---
 async function loadStats() {
   try {
-    const response = await fetch('/api/stats');
+    const response = await authenticatedFetch('/api/stats');
     const stats = await response.json();
     
     // Update dashboard numbers
@@ -369,7 +426,7 @@ function updateStatsCounter(elementId, targetValue) {
 // Load logs from server
 async function loadLogs() {
   try {
-    const response = await fetch('/api/logs');
+    const response = await authenticatedFetch('/api/logs');
     allLogs = await response.json();
     
     filterAndRenderLogs();
@@ -443,7 +500,7 @@ async function clearLogs() {
   if (!confirm('Haqiqatdan ham barcha jurnallarni tozalab tashlamoqchimisiz?')) return;
   
   try {
-    const response = await fetch('/api/logs/clear', { method: 'POST' });
+    const response = await authenticatedFetch('/api/logs/clear', { method: 'POST' });
     const result = await response.json();
     if (result.success) {
       loadLogs();
@@ -455,10 +512,16 @@ async function clearLogs() {
   }
 }
 
-// Trigger Webhook Mock Test
+// Trigger Webhook Mock Test (Routed dynamic SaaS payload)
 async function runWebhookTest() {
   const username = testUsername.value.trim() || 'test_user';
   const text = testComment.value.trim() || 'narx';
+  const activePageId = facebookPageId.value.trim();
+
+  if (!activePageId) {
+    alert('Simulyatsiya qilish uchun avval Facebook Page ID maydonini to\'ldiring va sozlamalarni saqlang.');
+    return;
+  }
   
   triggerTestBtn.disabled = true;
   triggerTestBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Tekshirilmoqda...';
@@ -467,7 +530,7 @@ async function runWebhookTest() {
     object: 'instagram',
     entry: [
       {
-        id: 'entry_id_' + Date.now(),
+        id: activePageId, // Uses the user's configured Page ID to test routing
         time: Math.floor(Date.now() / 1000),
         changes: [
           {

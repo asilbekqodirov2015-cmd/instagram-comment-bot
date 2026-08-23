@@ -7,8 +7,13 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 // Mongoose Models
+const User = require('./models/User');
 const Config = require('./models/Config');
 const Log = require('./models/Log');
+
+// Authentication middleware and routes
+const auth = require('./middleware/auth');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +22,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Mount Authentication routes
+app.use('/api/auth', authRoutes);
 
 const CONFIG_PATH = path.join(__dirname, 'config.json');
 const LOGS_PATH = path.join(__dirname, 'logs.json');
@@ -40,9 +48,10 @@ if (MONGODB_URI) {
   console.log('MONGODB_URI environment variable is missing. Running in Local Mode with config.json and logs.json.');
 }
 
-// --- CONFIGURATION MANAGEMENT ---
+// --- CONFIGURATION MANAGEMENT (SaaS Scoped by userId) ---
 
 const DEFAULT_CONFIG = {
+  facebookPageId: '',
   triggerType: 'all',
   keywords: [],
   commentReplyText: 'Javobingizni lizingizga (DM) yubordik! 📩',
@@ -51,56 +60,68 @@ const DEFAULT_CONFIG = {
   dmText: 'Salom! Bizga kommentariya qoldirganingiz uchun rahmat. Siz so\'ragan ma\'lumotlar shu yerda.',
   dmMediaUrl: '',
   pageAccessToken: '',
-  verifyToken: process.env.INITIAL_VERIFY_TOKEN || 'instagram_bot_secret_token_2026'
+  verifyToken: 'instagram_bot_secret_token_2026'
 };
 
-// Helper: Get Config (Asynchronous)
-async function getConfiguration() {
+// Helper: Get Config for a specific user
+async function getConfiguration(userId) {
   if (isMongoConnected) {
     try {
-      let config = await Config.findOne();
+      let config = await Config.findOne({ userId });
       if (!config) {
-        config = new Config(DEFAULT_CONFIG);
+        config = new Config({ userId, ...DEFAULT_CONFIG });
         await config.save();
       }
       return config.toObject();
     } catch (error) {
-      console.error('Error reading config from MongoDB, using local fallback:', error.message);
+      console.error(`Error reading config from MongoDB for user ${userId}, using local fallback:`, error.message);
     }
   }
 
-  // Local file fallback
+  // Local file fallback (scoped by userId)
   try {
+    let configs = {};
     if (fs.existsSync(CONFIG_PATH)) {
       const data = fs.readFileSync(CONFIG_PATH, 'utf8');
-      return JSON.parse(data);
+      configs = JSON.parse(data);
     }
+    if (!configs[userId]) {
+      configs[userId] = { userId, ...DEFAULT_CONFIG };
+      fs.writeFileSync(CONFIG_PATH, JSON.stringify(configs, null, 2), 'utf8');
+    }
+    return configs[userId];
   } catch (error) {
     console.error('Error reading local config file:', error.message);
   }
-  return DEFAULT_CONFIG;
+  return { userId, ...DEFAULT_CONFIG };
 }
 
-// Helper: Save Config (Asynchronous)
-async function saveConfiguration(newConfig) {
+// Helper: Save Config for a specific user
+async function saveConfiguration(userId, newConfig) {
   if (isMongoConnected) {
     try {
-      let config = await Config.findOne();
+      let config = await Config.findOne({ userId });
       if (!config) {
-        config = new Config(newConfig);
+        config = new Config({ userId, ...newConfig });
       } else {
         Object.assign(config, newConfig);
       }
       await config.save();
       return true;
     } catch (error) {
-      console.error('Error saving config to MongoDB, saving locally:', error.message);
+      console.error(`Error saving config to MongoDB for user ${userId}:`, error.message);
     }
   }
 
   // Local file saving fallback
   try {
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(newConfig, null, 2), 'utf8');
+    let configs = {};
+    if (fs.existsSync(CONFIG_PATH)) {
+      const data = fs.readFileSync(CONFIG_PATH, 'utf8');
+      configs = JSON.parse(data);
+    }
+    configs[userId] = { userId, ...newConfig };
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(configs, null, 2), 'utf8');
     return true;
   } catch (error) {
     console.error('Error writing local config file:', error.message);
@@ -108,20 +129,21 @@ async function saveConfiguration(newConfig) {
   }
 }
 
-// Helper: Write Log (Asynchronous)
-async function writeLogEntry(logEntry) {
+// Helper: Write Log Entry (SaaS Scoped by userId)
+async function writeLogEntry(userId, logEntry) {
   const timestamp = new Date().toISOString();
   
   if (isMongoConnected) {
     try {
       const newLog = new Log({
+        userId,
         timestamp,
         ...logEntry
       });
       await newLog.save();
       return;
     } catch (error) {
-      console.error('Error writing log to MongoDB, saving locally:', error.message);
+      console.error(`Error writing log to MongoDB for user ${userId}:`, error.message);
     }
   }
 
@@ -134,12 +156,13 @@ async function writeLogEntry(logEntry) {
     }
     const newLog = {
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+      userId,
       timestamp,
       ...logEntry
     };
     logs.unshift(newLog);
-    if (logs.length > 200) {
-      logs = logs.slice(0, 200); // Cap at 200 logs locally
+    if (logs.length > 500) {
+      logs = logs.slice(0, 500); // Cap at 500 logs locally
     }
     fs.writeFileSync(LOGS_PATH, JSON.stringify(logs, null, 2), 'utf8');
   } catch (error) {
@@ -170,20 +193,20 @@ async function postCommentReply(commentId, replyText, accessToken) {
   return response.data;
 }
 
-// --- API ROUTES FOR DASHBOARD ---
+// --- API ROUTES FOR DASHBOARD (Protected by Auth middleware) ---
 
 // GET config
-app.get('/api/config', async (req, res) => {
-  const config = await getConfiguration();
+app.get('/api/config', auth, async (req, res) => {
+  const config = await getConfiguration(req.user.id);
   res.json(config);
 });
 
 // POST config
-app.post('/api/config', async (req, res) => {
-  const currentConfig = await getConfiguration();
+app.post('/api/config', auth, async (req, res) => {
+  const currentConfig = await getConfiguration(req.user.id);
   const newConfig = { ...currentConfig, ...req.body };
   
-  const success = await saveConfiguration(newConfig);
+  const success = await saveConfiguration(req.user.id, newConfig);
   if (success) {
     res.json({ success: true, config: newConfig });
   } else {
@@ -192,17 +215,20 @@ app.post('/api/config', async (req, res) => {
 });
 
 // GET logs
-app.get('/api/logs', async (req, res) => {
+app.get('/api/logs', auth, async (req, res) => {
   try {
     if (isMongoConnected) {
-      // Fetch latest 100 logs from MongoDB
-      const logs = await Log.find().sort({ timestamp: -1 }).limit(100);
+      // Fetch latest 100 logs for authenticated user
+      const logs = await Log.find({ userId: req.user.id }).sort({ timestamp: -1 }).limit(100);
       return res.json(logs);
     }
     
     if (fs.existsSync(LOGS_PATH)) {
       const data = fs.readFileSync(LOGS_PATH, 'utf8');
-      return res.json(JSON.parse(data));
+      const allLogsList = JSON.parse(data);
+      // Filter logs by userId
+      const userLogs = allLogsList.filter(l => l.userId === req.user.id);
+      return res.json(userLogs);
     }
     res.json([]);
   } catch (error) {
@@ -211,13 +237,14 @@ app.get('/api/logs', async (req, res) => {
 });
 
 // GET stats
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', auth, async (req, res) => {
   try {
     if (isMongoConnected) {
-      const totalComments = await Log.countDocuments();
-      const successReplies = await Log.countDocuments({ replyStatus: 'success' });
-      const successDMs = await Log.countDocuments({ dmStatus: 'success' });
+      const totalComments = await Log.countDocuments({ userId: req.user.id });
+      const successReplies = await Log.countDocuments({ userId: req.user.id, replyStatus: 'success' });
+      const successDMs = await Log.countDocuments({ userId: req.user.id, dmStatus: 'success' });
       const failedCount = await Log.countDocuments({
+        userId: req.user.id,
         $or: [{ replyStatus: 'failed' }, { dmStatus: 'failed' }]
       });
       return res.json({ totalComments, successReplies, successDMs, failedCount });
@@ -230,10 +257,11 @@ app.get('/api/stats', async (req, res) => {
       logs = JSON.parse(data);
     }
     
-    const totalComments = logs.length;
-    const successReplies = logs.filter(l => l.replyStatus === 'success').length;
-    const successDMs = logs.filter(l => l.dmStatus === 'success').length;
-    const failedCount = logs.filter(l => l.replyStatus === 'failed' || l.dmStatus === 'failed').length;
+    const userLogs = logs.filter(l => l.userId === req.user.id);
+    const totalComments = userLogs.length;
+    const successReplies = userLogs.filter(l => l.replyStatus === 'success').length;
+    const successDMs = userLogs.filter(l => l.dmStatus === 'success').length;
+    const failedCount = userLogs.filter(l => l.replyStatus === 'failed' || l.dmStatus === 'failed').length;
     
     res.json({ totalComments, successReplies, successDMs, failedCount });
   } catch (error) {
@@ -242,34 +270,40 @@ app.get('/api/stats', async (req, res) => {
 });
 
 // Clear logs
-app.post('/api/logs/clear', async (req, res) => {
+app.post('/api/logs/clear', auth, async (req, res) => {
   try {
     if (isMongoConnected) {
-      await Log.deleteMany({});
+      await Log.deleteMany({ userId: req.user.id });
       return res.json({ success: true });
     }
     
-    fs.writeFileSync(LOGS_PATH, JSON.stringify([], null, 2), 'utf8');
+    let logs = [];
+    if (fs.existsSync(LOGS_PATH)) {
+      const data = fs.readFileSync(LOGS_PATH, 'utf8');
+      logs = JSON.parse(data);
+    }
+    // Delete logs of this user
+    const remainingLogs = logs.filter(l => l.userId !== req.user.id);
+    fs.writeFileSync(LOGS_PATH, JSON.stringify(remainingLogs, null, 2), 'utf8');
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// --- WEBHOOK ROUTES ---
+// --- WEBHOOK ROUTES (SaaS Dynamic Routing) ---
 
-// GET: Webhook Verification
-app.get('/webhook', async (req, res) => {
-  const config = await getConfiguration();
-  const verifyToken = config.verifyToken;
+// GET: Webhook Verification (Checks against App Master verify token)
+app.get('/webhook', (req, res) => {
+  const MASTER_VERIFY_TOKEN = process.env.INITIAL_VERIFY_TOKEN || 'instagram_bot_secret_token_2026';
 
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
   if (mode && token) {
-    if (mode === 'subscribe' && token === verifyToken) {
-      console.log('Webhook successfully verified!');
+    if (mode === 'subscribe' && token === MASTER_VERIFY_TOKEN) {
+      console.log('Webhook Master Verification Successful!');
       res.status(200).send(challenge);
     } else {
       console.log('Webhook verification failed. Token mismatch.');
@@ -280,16 +314,39 @@ app.get('/webhook', async (req, res) => {
   }
 });
 
-// POST: Receive events from Instagram
+// POST: Receive events from Instagram and Route to matching User Configuration dynamically
 app.post('/webhook', async (req, res) => {
   const body = req.body;
-  const config = await getConfiguration();
 
   // Check if this is an event from Instagram subscription
   if (body.object === 'instagram') {
     for (const entry of body.entry) {
-      if (!entry.changes) continue;
+      const entryPageId = entry.id; // Facebook Page ID receiving the comment
+      if (!entry.changes || !entryPageId) continue;
       
+      // Dynamic Lookup: Find configuration matching the incoming Facebook Page ID
+      let config = null;
+      if (isMongoConnected) {
+        config = await Config.findOne({ facebookPageId: entryPageId });
+      } else {
+        // Local fallback lookup
+        let configs = {};
+        if (fs.existsSync(CONFIG_PATH)) {
+          configs = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+        }
+        const foundUserId = Object.keys(configs).find(uid => configs[uid].facebookPageId === entryPageId);
+        if (foundUserId) {
+          config = configs[foundUserId];
+        }
+      }
+
+      if (!config) {
+        console.log(`[ROUTE SKIP] No user configuration found for Facebook Page ID: ${entryPageId}. Skipping webhook.`);
+        continue;
+      }
+
+      const activeUserId = config.userId;
+
       for (const change of entry.changes) {
         if (change.field === 'comments') {
           const comment = change.value;
@@ -302,13 +359,13 @@ app.post('/webhook', async (req, res) => {
           const mediaId = comment.media ? comment.media.id : 'Noma\'lum';
           const parentId = comment.parent_id;
 
-          // Skip if this is a reply to another comment
+          // Skip replies to other comments
           if (parentId) {
             console.log(`Skipped comment reply: ${commentId}`);
             continue;
           }
 
-          console.log(`Received new comment from @${commenterUsername}: "${commentText}"`);
+          console.log(`[USER ${activeUserId}] Processing comment from @${commenterUsername}: "${commentText}"`);
 
           // 1. Keyword check
           let matchesFilter = false;
@@ -323,7 +380,7 @@ app.post('/webhook', async (req, res) => {
           }
 
           if (!matchesFilter) {
-            console.log(`Comment "${commentText}" did not match keywords. Skipping response.`);
+            console.log(`[USER ${activeUserId}] Comment did not match keywords. Skipping.`);
             continue;
           }
 
@@ -341,18 +398,17 @@ app.post('/webhook', async (req, res) => {
 
           const pageAccessToken = config.pageAccessToken;
           if (!pageAccessToken) {
-            console.error('Meta Access Token is missing.');
+            console.error(`[USER ${activeUserId}] Page Access Token is missing.`);
             logEntry.replyStatus = 'failed';
             logEntry.dmStatus = 'failed';
-            logEntry.error = 'Meta Access Token kiritilmagan. Panel orqali sozlang.';
-            await writeLogEntry(logEntry);
+            logEntry.error = 'Page Access Token kiritilmagan. Panelda sozlang.';
+            await writeLogEntry(activeUserId, logEntry);
             continue;
           }
 
           // 2. Publish comment reply (Support Random Comment Replies)
           let replySuccess = false;
           try {
-            // Select random reply from array or use default text
             const replies = config.commentReplies && config.commentReplies.length > 0 
               ? config.commentReplies 
               : [config.commentReplyText || 'Javobingizni lizingizga (DM) yubordik! 📩'];
@@ -363,12 +419,12 @@ app.post('/webhook', async (req, res) => {
               await postCommentReply(commentId, selectedReply, pageAccessToken);
               logEntry.replyStatus = 'success';
               replySuccess = true;
-              console.log(`Successfully replied to comment ${commentId} with: "${selectedReply}"`);
+              console.log(`[USER ${activeUserId}] Replied to ${commentId} with: "${selectedReply}"`);
             } else {
               logEntry.replyStatus = 'skipped (matn bo\'sh)';
             }
           } catch (err) {
-            console.error('Error replying to comment:', err.response?.data || err.message);
+            console.error(`[USER ${activeUserId}] Error replying to comment:`, err.response?.data || err.message);
             logEntry.replyStatus = 'failed';
             const apiErr = err.response?.data?.error?.message || err.message;
             logEntry.error = `Comment reply error: ${apiErr}`;
@@ -381,7 +437,7 @@ app.post('/webhook', async (req, res) => {
             if (config.dmType === 'text') {
               await sendMetaMessage(recipient, { text: config.dmText }, pageAccessToken);
               logEntry.dmStatus = 'success';
-              console.log(`Sent DM (text) to commenter of ${commentId}`);
+              console.log(`[USER ${activeUserId}] Sent DM (text) to commenter of ${commentId}`);
 
             } else if (config.dmType === 'image') {
               await sendMetaMessage(recipient, {
@@ -391,7 +447,7 @@ app.post('/webhook', async (req, res) => {
                 }
               }, pageAccessToken);
               logEntry.dmStatus = 'success';
-              console.log(`Sent DM (image) to commenter of ${commentId}`);
+              console.log(`[USER ${activeUserId}] Sent DM (image) to commenter of ${commentId}`);
 
             } else if (config.dmType === 'video') {
               await sendMetaMessage(recipient, {
@@ -401,7 +457,7 @@ app.post('/webhook', async (req, res) => {
                 }
               }, pageAccessToken);
               logEntry.dmStatus = 'success';
-              console.log(`Sent DM (video) to commenter of ${commentId}`);
+              console.log(`[USER ${activeUserId}] Sent DM (video) to commenter of ${commentId}`);
 
             } else if (config.dmType === 'text_image') {
               await sendMetaMessage(recipient, {
@@ -415,7 +471,7 @@ app.post('/webhook', async (req, res) => {
               
               await sendMetaMessage(recipient, { text: config.dmText }, pageAccessToken);
               logEntry.dmStatus = 'success';
-              console.log(`Sent DM (image + text) to commenter of ${commentId}`);
+              console.log(`[USER ${activeUserId}] Sent DM (image + text) to commenter of ${commentId}`);
 
             } else if (config.dmType === 'text_video') {
               await sendMetaMessage(recipient, {
@@ -429,11 +485,11 @@ app.post('/webhook', async (req, res) => {
 
               await sendMetaMessage(recipient, { text: config.dmText }, pageAccessToken);
               logEntry.dmStatus = 'success';
-              console.log(`Sent DM (video + text) to commenter of ${commentId}`);
+              console.log(`[USER ${activeUserId}] Sent DM (video + text) to commenter of ${commentId}`);
             }
 
           } catch (err) {
-            console.error('Error sending DM:', err.response?.data || err.message);
+            console.error(`[USER ${activeUserId}] Error sending DM:`, err.response?.data || err.message);
             logEntry.dmStatus = 'failed';
             const apiErr = err.response?.data?.error?.message || err.message;
             logEntry.error = logEntry.error 
@@ -441,13 +497,12 @@ app.post('/webhook', async (req, res) => {
               : `DM error: ${apiErr}`;
           }
 
-          // Write results to log (MongoDB or JSON)
-          await writeLogEntry(logEntry);
+          // Write results to log
+          await writeLogEntry(activeUserId, logEntry);
         }
       }
     }
     
-    // Return a 200 OK response to let Meta know we received the event
     res.status(200).send('EVENT_RECEIVED');
   } else {
     res.sendStatus(404);
@@ -456,7 +511,8 @@ app.post('/webhook', async (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Instagram auto-reply bot server is running on port ${PORT}`);
-  console.log(`Dashboard available at: http://localhost:${PORT}`);
+  console.log(`Instagram SaaS Webhook and API server is running on port ${PORT}`);
+  console.log(`Authentication APIs mounted at /api/auth`);
+  console.log(`Protected User Dashboard APIs mounted at /api/*`);
   console.log(`Webhook endpoint: http://localhost:${PORT}/webhook`);
 });

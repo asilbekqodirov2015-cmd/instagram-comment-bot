@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InstaResponse - Ro'yxatdan O'tish</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .auth-container {
+      max-width: 420px;
+      width: 100%;
+      margin: 8vh auto;
+      padding: 0 1rem;
+    }
+    .auth-card {
+      padding: 2.5rem 2rem;
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .auth-header .icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: white;
+      margin-bottom: 1rem;
+      box-shadow: 0 5px 15px var(--accent-glow);
+    }
+    .auth-header h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .auth-header p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    .auth-footer-links {
+      display: flex;
+      justify-content: center;
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+    }
+    .auth-footer-links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: 0.25rem;
+    }
+    .auth-footer-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body class="theme-sunset">
+  <div class="glass-bg"></div>
+  
+  <div class="auth-container">
+    
+    <div class="glass-card auth-card">
+      <div class="auth-header">
+        <div class="icon"><i class="fa-solid fa-user-plus"></i></div>
+        <h2>Hisob Yaratish</h2>
+        <p>Bepul foydalanishni boshlang</p>
+      </div>
+      
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="regEmail">Elektron Pochta</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" id="regEmail" placeholder="user@gmail.com" required style="padding-left: 2.4rem;">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="regPassword">Yangi Parol</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-key input-icon"></i>
+            <input type="password" id="regPassword" placeholder="Kamida 6ta belgi bo'lishi kerak" required minlength="6" style="padding-left: 2.4rem;">
+            <button type="button" class="toggle-password-btn" onclick="togglePassword('regPassword')">
+              <i class="fa-solid fa-eye" id="regPassword-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="regPasswordConfirm">Parolni Tasdiqlang</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-check-double input-icon"></i>
+            <input type="password" id="regPasswordConfirm" placeholder="Parolni qayta kiriting" required style="padding-left: 2.4rem;">
+          </div>
+        </div>
+        
+        <div class="actions-area" style="margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-accent btn-large" id="regSubmitBtn">
+            <i class="fa-solid fa-user-plus"></i> Ro'yxatdan O'tish
+          </button>
+        </div>
+      </form>
+      
+      <div class="auth-footer-links">
+        <span>Akkauntingiz bormi? <a href="login.html">Kirish</a></span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('jwtToken')) {
+      window.location.href = 'index.html';
+    }
+
+    // Toggle password view
+    function togglePassword(id) {
+      const field = document.getElementById(id);
+      const eye = document.getElementById(id + '-eye');
+      if (field.type === 'password') {
+        field.type = 'text';
+        eye.className = 'fa-solid fa-eye-slash';
+      } else {
+        field.type = 'password';
+        eye.className = 'fa-solid fa-eye';
+      }
+    }
+
+    // Handle Register Submit
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+      const btn = document.getElementById('regSubmitBtn');
+
+      // Validate match
+      if (password !== passwordConfirm) {
+        alert('Parollar bir-biriga mos kelmadi.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ro\'yxatdan o\'tilmoqda...';
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const resData = await response.json();
+
+        if (response.ok && resData.success) {
+          alert(resData.message || 'Muvaffaqiyatli ro\'yxatdan o\'tildi!');
+          localStorage.setItem('jwtToken', resData.token);
+          localStorage.setItem('userEmail', resData.email);
+          window.location.href = 'index.html';
+        } else {
+          alert(resData.message || 'Ro\'yxatdan o\'tishda xatolik yuz berdi.');
+        }
+      } catch (err) {
+        alert('Tarmoq ulanishida xatolik.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Ro\'yxatdan O\'tish';
+      }
+    });
+  </script>
+</body>
+</html>

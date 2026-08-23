@@ -39,6 +39,13 @@
           <div class="pulse-dot"></div>
           <span class="status-label">Tizim Faol</span>
         </div>
+        <div class="status-separator"></div>
+        <div class="user-status-info" style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="userEmailDisplay" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">...</span>
+          <button type="button" id="logoutBtn" class="btn btn-secondary btn-small" style="padding: 0.35rem 0.7rem; font-size: 0.75rem;">
+            <i class="fa-solid fa-right-from-bracket"></i> Chiqish
+          </button>
+        </div>
       </div>
     </header>
 
@@ -90,18 +97,29 @@
             
             <div class="card-body">
               <div class="form-group">
-                <label for="pageAccessToken">
-                  Page Access Token 
-                  <span class="tooltip" data-tooltip="Meta Developer panelidan olingan sahifa tokeni."><i class="fa-solid fa-circle-info"></i></span>
-                </label>
-                <div class="input-with-icon">
-                  <i class="fa-solid fa-lock input-icon"></i>
-                  <input type="password" id="pageAccessToken" name="pageAccessToken" placeholder="E.g. EAABw2... (yashirin)" required autocomplete="off">
-                  <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('pageAccessToken')">
-                    <i class="fa-solid fa-eye" id="pageAccessToken-eye"></i>
-                  </button>
-                </div>
+              <label for="facebookPageId">
+                Facebook Page ID
+                <span class="tooltip" data-tooltip="SaaS Webhook yo'naltirishi to'g'ri ishlashi uchun bot bog'langan Facebook Sahifangizning ID raqami."><i class="fa-solid fa-circle-info"></i></span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-hashtag input-icon"></i>
+                <input type="text" id="facebookPageId" name="facebookPageId" placeholder="E.g. 102938475610293" required style="padding-left: 2.4rem;">
               </div>
+            </div>
+
+            <div class="form-group">
+              <label for="pageAccessToken">
+                Page Access Token 
+                <span class="tooltip" data-tooltip="Meta Developer panelidan olingan sahifa tokeni."><i class="fa-solid fa-circle-info"></i></span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="pageAccessToken" name="pageAccessToken" placeholder="E.g. EAABw2... (yashirin)" required autocomplete="off">
+                <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('pageAccessToken')">
+                  <i class="fa-solid fa-eye" id="pageAccessToken-eye"></i>
+                </button>
+              </div>
+            </div>
               
               <div class="form-group">
                 <label for="verifyToken">

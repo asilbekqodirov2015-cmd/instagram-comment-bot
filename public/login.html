@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InstaResponse - Tizimga Kirish</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .auth-container {
+      max-width: 420px;
+      width: 100%;
+      margin: 8vh auto;
+      padding: 0 1rem;
+    }
+    .auth-card {
+      padding: 2.5rem 2rem;
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .auth-header .icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: white;
+      margin-bottom: 1rem;
+      box-shadow: 0 5px 15px var(--primary-glow);
+    }
+    .auth-header h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .auth-header p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    .auth-footer-links {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+    }
+    .auth-footer-links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .auth-footer-links a:hover {
+      text-decoration: underline;
+    }
+    .forgot-link-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0;
+    }
+    .forgot-link-btn:hover {
+      color: var(--text-main);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body class="theme-sunset">
+  <div class="glass-bg"></div>
+  
+  <div class="auth-container">
+    
+    <!-- Login Form Card -->
+    <div class="glass-card auth-card" id="loginCard">
+      <div class="auth-header">
+        <div class="icon"><i class="fa-brands fa-instagram"></i></div>
+        <h2>InstaResponse PRO</h2>
+        <p>Boshqaruv paneliga kirish</p>
+      </div>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">Email Manzili</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" id="loginEmail" placeholder="E.g. user@gmail.com" required style="padding-left: 2.4rem;">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="loginPassword">Maxfiy Parol</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-key input-icon"></i>
+            <input type="password" id="loginPassword" placeholder="Parolingizni kiriting" required style="padding-left: 2.4rem;">
+            <button type="button" class="toggle-password-btn" onclick="togglePassword('loginPassword')">
+              <i class="fa-solid fa-eye" id="loginPassword-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="actions-area" style="margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-primary btn-large" id="loginSubmitBtn">
+            <i class="fa-solid fa-right-to-bracket"></i> Kirish
+          </button>
+        </div>
+      </form>
+      
+      <div class="auth-footer-links">
+        <button type="button" class="forgot-link-btn" onclick="showForgotPassword(true)">Parolni unutdingizmi?</button>
+        <span>Hisobingiz yo'qmi? <a href="register.html">Ro'yxatdan o'tish</a></span>
+      </div>
+    </div>
+
+    <!-- Forgot Password Form Card -->
+    <div class="glass-card auth-card" id="forgotCard" style="display: none;">
+      <div class="auth-header">
+        <div class="icon" style="background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);"><i class="fa-solid fa-unlock-keyhole"></i></div>
+        <h2>Parolni Tiklash</h2>
+        <p>Email manzilingizga tiklash kaliti yuboramiz</p>
+      </div>
+      
+      <form id="forgotForm">
+        <div class="form-group">
+          <label for="forgotEmail">Email Manzili</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" id="forgotEmail" placeholder="E.g. user@gmail.com" required style="padding-left: 2.4rem;">
+          </div>
+        </div>
+        
+        <div class="actions-area" style="margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-accent btn-large" id="forgotSubmitBtn">
+            <i class="fa-solid fa-paper-plane"></i> Tiklash kalitini olish
+          </button>
+        </div>
+      </form>
+      
+      <!-- Reset Form Sub-Section (triggered once token is generated) -->
+      <div id="resetSection" style="display: none; margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">Yangi Parolni O'rnatish</h3>
+        <form id="resetForm">
+          <div class="form-group">
+            <label for="resetToken">Tiklash Kaliti (Reset Token)</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-ticket input-icon"></i>
+              <input type="text" id="resetToken" placeholder="Nusxalangan kalitni kiriting" required style="padding-left: 2.4rem;">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="resetPassword">Yangi Parol</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-key input-icon"></i>
+              <input type="password" id="resetPassword" placeholder="Yangi parolni kiriting" required style="padding-left: 2.4rem;">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-large">
+            <i class="fa-solid fa-check"></i> Parolni yangilash
+          </button>
+        </form>
+      </div>
+      
+      <div class="auth-footer-links" style="justify-content: center; margin-top: 1.5rem;">
+        <button type="button" class="forgot-link-btn" onclick="showForgotPassword(false)" style="color: var(--accent); font-weight:600;"><i class="fa-solid fa-arrow-left"></i> Kirish sahifasiga qaytish</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('jwtToken')) {
+      window.location.href = 'index.html';
+    }
+
+    // Toggle password view
+    function togglePassword(id) {
+      const field = document.getElementById(id);
+      const eye = document.getElementById(id + '-eye');
+      if (field.type === 'password') {
+        field.type = 'text';
+        eye.className = 'fa-solid fa-eye-slash';
+      } else {
+        field.type = 'password';
+        eye.className = 'fa-solid fa-eye';
+      }
+    }
+
+    // Switch between cards
+    function showForgotPassword(show) {
+      document.getElementById('loginCard').style.display = show ? 'none' : 'block';
+      document.getElementById('forgotCard').style.display = show ? 'block' : 'none';
+      document.getElementById('resetSection').style.display = 'none';
+    }
+
+    // Handle Login Submit
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginSubmitBtn');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kirilmoqda...';
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const resData = await response.json();
+
+        if (response.ok && resData.success) {
+          localStorage.setItem('jwtToken', resData.token);
+          localStorage.setItem('userEmail', resData.email);
+          window.location.href = 'index.html';
+        } else {
+          alert(resData.message || 'Kirishda xatolik yuz berdi.');
+        }
+      } catch (err) {
+        alert('Tarmoq ulanishida xatolik.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Kirish';
+      }
+    });
+
+    // Handle Forgot Password Submit
+    document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('forgotEmail').value.trim();
+      const btn = document.getElementById('forgotSubmitBtn');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Tekshirilmoqda...';
+
+      try {
+        const response = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const resData = await response.json();
+
+        if (response.ok && resData.success) {
+          alert('Parolni tiklash kaliti yaratildi! Kalitni quyidagi maydonga kiriting: \n\nKalit: ' + resData.resetToken);
+          document.getElementById('resetToken').value = resData.resetToken;
+          document.getElementById('resetSection').style.display = 'block';
+        } else {
+          alert(resData.message || 'Email topilmadi.');
+        }
+      } catch (err) {
+        alert('Tarmoq ulanishida xatolik.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Tiklash kalitini olish';
+      }
+    });
+
+    // Handle Password Reset Submit
+    document.getElementById('resetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = document.getElementById('resetToken').value.trim();
+      const password = document.getElementById('resetPassword').value;
+
+      try {
+        const response = await fetch(`/api/auth/reset-password/${token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const resData = await response.json();
+
+        if (response.ok && resData.success) {
+          alert(resData.message);
+          showForgotPassword(false);
+        } else {
+          alert(resData.message || 'Xatolik yuz berdi.');
+        }
+      } catch (err) {
+        alert('Tarmoq ulanishida xatolik.');
+      }
+    });
+  </script>
+</body>
+</html>
