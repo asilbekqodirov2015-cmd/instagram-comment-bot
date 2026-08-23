@@ -179,7 +179,7 @@
   <script>
     // Redirect if already logged in
     if (localStorage.getItem('jwtToken')) {
-      window.location.href = 'index.html';
+      window.location.href = 'dashboard.html';
     }
 
     // Toggle password view
@@ -223,7 +223,7 @@
         if (response.ok && resData.success) {
           localStorage.setItem('jwtToken', resData.token);
           localStorage.setItem('userEmail', resData.email);
-          window.location.href = 'index.html';
+          window.location.href = 'dashboard.html';
         } else {
           alert(resData.message || 'Kirishda xatolik yuz berdi.');
         }

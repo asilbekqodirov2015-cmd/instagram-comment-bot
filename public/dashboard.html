@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram AutoResponder - Premium Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-sunset">
+  <div class="glass-bg"></div>
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="main-header">
+      <div class="logo-area" style="cursor: pointer;" onclick="window.location.href='index.html'">
+        <div class="logo-icon">
+          <i class="fa-brands fa-instagram"></i>
+        </div>
+        <div class="logo-text">
+          <h1>InstaResponse <span class="premium-badge">PRO</span></h1>
+          <span class="subtext">Auto-Reply & DM System</span>
+        </div>
+      </div>
+      
+      <!-- Theme Switcher and Status -->
+      <div class="header-controls">
+        <div class="theme-switcher">
+          <span class="control-label">Dizayn:</span>
+          <button class="theme-btn sunset active" data-theme="theme-sunset" title="Sunset Orange"></button>
+          <button class="theme-btn midnight" data-theme="theme-midnight" title="Midnight Cyan"></button>
+          <button class="theme-btn cyberpunk" data-theme="theme-cyberpunk" title="Cyberpunk Green"></button>
+        </div>
+        <div class="status-separator"></div>
+        <div class="status-indicator">
+          <div class="pulse-dot"></div>
+          <span class="status-label">Tizim Faol</span>
+        </div>
+        <div class="status-separator"></div>
+        <div class="user-status-info" style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="userEmailDisplay" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">...</span>
+          <button type="button" id="logoutBtn" class="btn btn-secondary btn-small" style="padding: 0.35rem 0.7rem; font-size: 0.75rem;">
+            <i class="fa-solid fa-right-from-bracket"></i> Chiqish
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats Dashboard Row -->
+    <section class="stats-row">
+      <div class="stats-card total">
+        <div class="stats-icon"><i class="fa-solid fa-comment-dots"></i></div>
+        <div class="stats-info">
+          <h3>Jami Kommentlar</h3>
+          <span class="stats-number" id="statTotal">0</span>
+        </div>
+      </div>
+      <div class="stats-card replies">
+        <div class="stats-icon"><i class="fa-solid fa-reply-all"></i></div>
+        <div class="stats-info">
+          <h3>Javob Qaytarilgan</h3>
+          <span class="stats-number" id="statReplies">0</span>
+        </div>
+      </div>
+      <div class="stats-card dms">
+        <div class="stats-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <div class="stats-info">
+          <h3>DM yuborilgan</h3>
+          <span class="stats-number" id="statDMs">0</span>
+        </div>
+      </div>
+      <div class="stats-card failed">
+        <div class="stats-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stats-info">
+          <h3>Xatoliklar</h3>
+          <span class="stats-number" id="statFailed">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <main class="dashboard-grid">
+      
+      <!-- Left Column: Settings -->
+      <section class="settings-column">
+        <form id="configForm" class="settings-form">
+          
+          <!-- Meta API Configuration -->
+          <div class="glass-card">
+            <div class="card-header">
+              <i class="fa-solid fa-key header-icon"></i>
+              <h2>Meta API Sozlamalari</h2>
+            </div>
+            
+            <div class="card-body">
+              <div class="form-group">
+                <label for="facebookPageId">
+                  Facebook Page ID
+                  <span class="tooltip" data-tooltip="SaaS Webhook yo'naltirishi to'g'ri ishlashi uchun bot bog'langan Facebook Sahifangizning ID raqami."><i class="fa-solid fa-circle-info"></i></span>
+                </label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-hashtag input-icon"></i>
+                  <input type="text" id="facebookPageId" name="facebookPageId" placeholder="E.g. 102938475610293" required style="padding-left: 2.4rem;">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="pageAccessToken">
+                  Page Access Token 
+                  <span class="tooltip" data-tooltip="Meta Developer panelidan olingan sahifa tokeni."><i class="fa-solid fa-circle-info"></i></span>
+                </label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-lock input-icon"></i>
+                  <input type="password" id="pageAccessToken" name="pageAccessToken" placeholder="E.g. EAABw2... (yashirin)" required autocomplete="off">
+                  <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('pageAccessToken')">
+                    <i class="fa-solid fa-eye" id="pageAccessToken-eye"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="verifyToken">
+                  Webhook Verify Token
+                  <span class="tooltip" data-tooltip="Meta Webhook sozlamasiga kiritiladigan maxfiy so'z."><i class="fa-solid fa-circle-info"></i></span>
+                </label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-shield-halved input-icon"></i>
+                  <input type="text" id="verifyToken" name="verifyToken" placeholder="E.g. instagram_bot_secret_token_2026" required>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comment Trigger Settings -->
+          <div class="glass-card">
+            <div class="card-header">
+              <i class="fa-solid fa-comments header-icon"></i>
+              <h2>Kommentariya va Triggerlar</h2>
+            </div>
+            
+            <div class="card-body">
+              <div class="form-group">
+                <label>Trigger turi (Qachon ishga tushsin?)</label>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input type="radio" name="triggerType" value="all" checked>
+                    <span class="radio-custom"></span>
+                    <span class="radio-text">Barcha kommentlarga</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="triggerType" value="keywords">
+                    <span class="radio-custom"></span>
+                    <span class="radio-text">Kalit so'zlar bo'yicha</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Conditional Keywords Input -->
+              <div class="form-group" id="keywordsContainer" style="display: none;">
+                <label for="keywordsInput">Kalit so'zlar (vergul bilan ajrating)</label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-tags input-icon"></i>
+                  <input type="text" id="keywordsInput" placeholder="E.g. narx, link, buyurtma, info">
+                </div>
+                <div id="keywordsBadges" class="badges-container"></div>
+              </div>
+
+              <!-- Premium Feature: Random Multiple Replies -->
+              <div class="form-group">
+                <div class="label-with-action">
+                  <label>Kommentga yoziladigan javob variantlari</label>
+                  <button type="button" class="btn-link" id="addReplyVariantBtn">
+                    <i class="fa-solid fa-plus"></i> Variant qo'shish
+                  </button>
+                </div>
+                <p class="input-hint">Meta spam-bloklaridan saqlanish uchun tizim har bir kommentariyaga quyidagi javoblardan birini tasodifiy (random) tanlab yuboradi.</p>
+                <div id="replyVariantsContainer" class="dynamic-inputs-list">
+                  <!-- Dynamic reply text inputs added here -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DM Response Settings -->
+          <div class="glass-card">
+            <div class="card-header">
+              <i class="fa-solid fa-paper-plane header-icon"></i>
+              <h2>Direct (DM) Xabar Sozlamalari</h2>
+            </div>
+            
+            <div class="card-body">
+              <div class="form-group">
+                <label for="dmType">DM (Lichka) xabar turi</label>
+                <div class="select-wrapper">
+                  <select id="dmType" name="dmType">
+                    <option value="text">Faqat matn (Text only)</option>
+                    <option value="image">Faqat rasm (Image only)</option>
+                    <option value="video">Faqat video (Video only)</option>
+                    <option value="text_image">Rasm + Matn (Image + Text)</option>
+                    <option value="text_video">Video + Matn (Video + Text)</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+
+              <!-- Conditional Media URL Input -->
+              <div class="form-group" id="mediaUrlContainer" style="display: none;">
+                <label for="dmMediaUrl">Rasm yoki Video Havolasi (URL)</label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-link input-icon"></i>
+                  <input type="url" id="dmMediaUrl" name="dmMediaUrl" placeholder="https://misol.com/rasm.jpg">
+                </div>
+                <p class="input-hint">Rasm/video ochiq internetda va to'g'ridan-to'g'ri faylning o'ziga olib borishi shart.</p>
+              </div>
+
+              <!-- Conditional DM Text Input -->
+              <div class="form-group" id="dmTextContainer">
+                <label for="dmText">DM yuboriladigan xabar matni</label>
+                <textarea id="dmText" name="dmText" rows="4" placeholder="Direct orqali yuboriladigan shaxsiy xabar matni..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="actions-area">
+            <button type="submit" class="btn btn-primary btn-large">
+              <i class="fa-solid fa-floppy-disk"></i> Sozlamalarni Saqlash
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Right Column: Live Preview & Logs -->
+      <section class="logs-column">
+        
+        <!-- Premium Feature: Live Instagram Preview Mockup -->
+        <div class="glass-card preview-card">
+          <div class="card-header">
+            <i class="fa-solid fa-mobile-screen-button header-icon"></i>
+            <h2>Instagram Live Preview (Jonli Ko'rinish)</h2>
+            <div class="preview-tabs">
+              <button type="button" class="preview-tab-btn active" id="tabBtnComments">Kommentlar</button>
+              <button type="button" class="preview-tab-btn" id="tabBtnDirect">Direct (DM)</button>
+            </div>
+          </div>
+          
+          <div class="card-body preview-body">
+            
+            <!-- Phone Frame -->
+            <div class="phone-mockup">
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>9:41</span>
+                  <div class="phone-status-icons">
+                    <i class="fa-solid fa-signal"></i>
+                    <i class="fa-solid fa-wifi"></i>
+                    <i class="fa-solid fa-battery-three-quarters"></i>
+                  </div>
+                </div>
+                
+                <!-- Instagram Mockup Header -->
+                <div class="insta-mock-header">
+                  <div class="insta-mock-profile">
+                    <div class="mock-avatar-gradient">
+                      <div class="mock-avatar">
+                        <i class="fa-solid fa-user"></i>
+                      </div>
+                    </div>
+                    <div class="mock-header-text">
+                      <span class="mock-username">sizning_sahifangiz</span>
+                      <span class="mock-location">Reel / Video</span>
+                    </div>
+                  </div>
+                  <i class="fa-solid fa-ellipsis"></i>
+                </div>
+                
+                <!-- Instagram Comment Tab View -->
+                <div class="insta-mock-view active" id="mockViewComments">
+                  <div class="mock-scroll-area">
+                    <!-- Post Description -->
+                    <div class="mock-comment-item">
+                      <div class="mock-user-avatar owner">S</div>
+                      <div class="mock-comment-text">
+                        <strong>sizning_sahifangiz</strong> Nyutonning yangi mahsuloti! Fikrlaringizni kommentda qoldiring...
+                      </div>
+                    </div>
+                    
+                    <div class="mock-divider">Barcha kommentariyalar</div>
+                    
+                    <!-- Commenter comment -->
+                    <div class="mock-comment-item">
+                      <div class="mock-user-avatar commenter">U</div>
+                      <div class="mock-comment-text">
+                        <strong>instatester</strong> <span class="comment-trigger-highlight">narxi qancha?</span> batafsil yuboring.
+                      </div>
+                    </div>
+                    
+                    <!-- Bot Reply comment -->
+                    <div class="mock-comment-item reply-animation" id="mockCommentReplyItem">
+                      <div class="mock-user-avatar owner">S</div>
+                      <div class="mock-comment-text">
+                        <strong>sizning_sahifangiz</strong> <span id="mockReplyTextBubble">Javobingizni lizingizga (DM) yubordik! 📩</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mock-input-area">
+                    <div class="mock-user-avatar owner sm">S</div>
+                    <div class="mock-input-placeholder">Kommentariya qoldiring...</div>
+                  </div>
+                </div>
+
+                <!-- Instagram DM Tab View -->
+                <div class="insta-mock-view" id="mockViewDirect">
+                  <div class="insta-dm-header">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <div class="dm-header-info">
+                      <div class="mock-user-avatar commenter sm">U</div>
+                      <strong>instatester</strong>
+                    </div>
+                    <div class="dm-header-actions">
+                      <i class="fa-solid fa-phone"></i>
+                      <i class="fa-solid fa-video"></i>
+                    </div>
+                  </div>
+                  
+                  <div class="mock-scroll-area dm-chat-area">
+                    <div class="chat-time">Bugun, 9:41</div>
+                    
+                    <!-- Commenter initial comment note -->
+                    <div class="chat-system-note">Kommentariya uchun Direct-javob: "narxi qancha?"</div>
+                    
+                    <!-- Bot media message (conditionally visible) -->
+                    <div class="chat-bubble-container bot-message" id="mockDmMediaBubble" style="display: none;">
+                      <div class="mock-user-avatar owner xs">S</div>
+                      <div class="chat-media-wrapper">
+                        <div class="chat-media-preview" id="mockDmMediaPreview">
+                          <!-- Image/Video goes here -->
+                          <div class="media-placeholder-icon"><i class="fa-regular fa-image"></i></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Bot text message (conditionally visible) -->
+                    <div class="chat-bubble-container bot-message" id="mockDmTextBubble">
+                      <div class="mock-user-avatar owner xs">S</div>
+                      <div class="chat-bubble" id="mockDmTextContent">
+                        Salom! Bizga kommentariya qoldirganingiz uchun rahmat. Siz so'ragan ma'lumotlar shu yerda.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mock-dm-input-area">
+                    <i class="fa-solid fa-camera"></i>
+                    <div class="mock-dm-input-placeholder">Xabar yuborish...</div>
+                    <i class="fa-regular fa-face-smile"></i>
+                    <i class="fa-regular fa-image"></i>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Live Logger -->
+        <div class="glass-card log-card">
+          <div class="card-header log-header">
+            <div class="header-left">
+              <i class="fa-solid fa-list-check header-icon"></i>
+              <h2>Faollik Tarixi (Activity Log)</h2>
+            </div>
+            <!-- Filtering UI -->
+            <div class="header-right logs-controls">
+              <div class="logs-filter-group">
+                <input type="text" id="logsSearchInput" placeholder="User qidirish..." class="logs-search-input">
+                <div class="select-wrapper sm">
+                  <select id="logsStatusFilter" class="logs-filter-select">
+                    <option value="all">Hammasi</option>
+                    <option value="success">Muvaffaqiyatli</option>
+                    <option value="failed">Xatolik bor</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-small" id="clearLogsBtn">
+                <i class="fa-solid fa-trash-can"></i> Tozalash
+              </button>
+            </div>
+          </div>
+          
+          <div class="card-body log-body">
+            <div class="table-responsive">
+              <table class="logs-table">
+                <thead>
+                  <tr>
+                    <th>Vaqt</th>
+                    <th>Foydalanuvchi</th>
+                    <th>Kommentariya</th>
+                    <th>Javob</th>
+                    <th>DM</th>
+                    <th>Holat</th>
+                  </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                  <tr class="empty-row">
+                    <td colspan="6">Hozircha faollik yo'q.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testing Card -->
+        <div class="glass-card">
+          <div class="card-header">
+            <i class="fa-solid fa-flask-vial header-icon"></i>
+            <h2>Tizimni Tekshirish (Local Testing)</h2>
+          </div>
+          <div class="card-body">
+            <p class="test-desc">Meta webhooklarisiz tizim ishlashini simulyatsiya qilib tekshirib ko'rishingiz mumkin.</p>
+            <div class="test-form">
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="testUsername">Test Foydalanuvchi nomi</label>
+                  <input type="text" id="testUsername" placeholder="E.g. test_user" value="instatester">
+                </div>
+                <div class="form-group flex-2">
+                  <label for="testComment">Test Kommentariya matni</label>
+                  <input type="text" id="testComment" placeholder="E.g. narxi qancha?" value="Menga narxi va batafsil ma'lumot bering">
+                </div>
+              </div>
+              <button type="button" class="btn btn-accent" id="triggerTestBtn">
+                <i class="fa-solid fa-play"></i> Testni Ishga Tushirish
+              </button>
+            </div>
+            <div id="testResultAlert" class="alert-box" style="display: none;"></div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+    
+    <!-- Footer -->
+    <footer class="main-footer">
+      <p>&copy; 2026 InstaResponse. Built by Antigravity AI for Instagram Business Automation.</p>
+    </footer>
+
+  </div>
+  
+  <script src="app.js"></script>
+</body>
+</html>
