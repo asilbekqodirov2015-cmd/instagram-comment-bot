@@ -97,6 +97,9 @@
         </div>
 
         <div class="top-bar-actions">
+          <button type="button" class="btn btn-secondary btn-small" onclick="openGuideModal()" style="border-color: rgba(255, 19, 97, 0.4); color: #fff;">
+            <i class="fa-solid fa-book-open"></i> To'liq Qo'llanma (A-Z)
+          </button>
           <div class="status-indicator">
             <div class="pulse-dot"></div>
             <span class="status-label">Tizim Faol 24/7</span>
@@ -889,6 +892,76 @@
         <button type="button" class="btn btn-primary" id="adminSaveTierBtn" style="width: 100%; margin-top: 1rem;">
           <i class="fa-solid fa-check"></i> Saqlash
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       A-TO-Z SETUP GUIDE MODAL
+       ======================================================== -->
+  <div class="modal-overlay" id="guideModal">
+    <div class="modal-card" style="max-width: 680px; max-height: 85vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-book-open" style="color: #ff1361;"></i> A dan Z gacha To'liq O'rnatish Qo'llanmasi</h3>
+        <button class="modal-close-btn" onclick="closeGuideModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-main);">
+        
+        <!-- Step 1 -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
+          <h4 style="color: #00f2fe; margin-bottom: 0.5rem;"><i class="fa-solid fa-1"></i>. Instagram Akkauntni Tayyorlash</h4>
+          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted);">
+            <li>Instagram ilovasida: <strong>Sozlamalar ➡️ Hisob turi (Account type) ➡️ Professional/Biznes hisobga o'tish</strong> (Bepul).</li>
+            <li>Facebook-da sahifa (Page) ochib, Instagram profilingizni unga ulang.</li>
+            <li>Instagramda: <strong>Sozlamalar ➡️ Xabarlar (Messages) ➡️ Allow access to messages</strong> ni yoqing.</li>
+          </ul>
+        </div>
+
+        <!-- Step 2 & 3 -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
+          <h4 style="color: #ff1361; margin-bottom: 0.5rem;"><i class="fa-solid fa-2"></i>. Meta Tokenlari va Page ID Olish</h4>
+          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted);">
+            <li><a href="https://developers.facebook.com" target="_blank" style="color: #00f2fe;">developers.facebook.com</a> ga kiring va yangi Business ilova yarating.</li>
+            <li><strong>Tools ➡️ Graph API Explorer</strong> bo'limiga kiring.</li>
+            <li>Facebook Sahifangizni tanlang va quyidagi 4 ta ruxsatni qo'shing:
+              <br><code>instagram_basic</code>, <code>instagram_manage_comments</code>, <code>instagram_manage_messages</code>, <code>pages_show_list</code>
+            </li>
+            <li><strong>Generate Access Token</strong> tugmasini bosib, chiqqan <strong>Page Access Token</strong>ni oling.</li>
+            <li><code>me?fields=id,name</code> so'rovini yuborib <strong>Facebook Page ID</strong> raqamini oling.</li>
+          </ul>
+        </div>
+
+        <!-- Step 4 -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
+          <h4 style="color: #10b981; margin-bottom: 0.5rem;"><i class="fa-solid fa-3"></i>. Saytimizga Kiritish</h4>
+          <p style="color: var(--text-muted); margin: 0 0 0.5rem 0;">Shaxsiy kabinetingizdagi <strong>Bot Boshqaruvi</strong> bo'limiga kiring:</p>
+          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted);">
+            <li><strong>Facebook Page ID:</strong> Olingan sahifa raqamini yozing.</li>
+            <li><strong>Page Access Token:</strong> Meta-dan olingan tokenni qo'ying.</li>
+            <li><strong>Verify Token:</strong> <code>instagram_bot_secret_token_2026</code> ni yozing.</li>
+            <li>Javob matnlari va DM sozlamalarini kiritib <strong>"Sozlamalarni Saqlash"</strong> tugmasini bosing.</li>
+          </ul>
+        </div>
+
+        <!-- Step 5 -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
+          <h4 style="color: #ec4899; margin-bottom: 0.5rem;"><i class="fa-solid fa-4"></i>. Meta Webhookni Ulab Jonli Ishga Tushirish</h4>
+          <p style="color: var(--text-muted); margin: 0 0 0.5rem 0;">Meta Developer ➡️ <strong>Webhooks</strong> ➡️ <strong>Instagram</strong> bo'limida:</p>
+          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted);">
+            <li><strong>Callback URL:</strong> <code>https://instagram-comment-bot-4aeh.onrender.com/webhook</code></li>
+            <li><strong>Verify Token:</strong> <code>instagram_bot_secret_token_2026</code></li>
+            <li><strong>Verify and Save</strong> tugmasini bosing.</li>
+            <li>Pastdagi <code>comments</code> va <code>messages</code> qatorlariga <strong>Subscribe</strong> bosing.</li>
+          </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-accent btn-large" onclick="closeGuideModal()" style="width: 100%;">
+            <i class="fa-solid fa-check"></i> Tushundim, Sozlashga O'tish
+          </button>
+        </div>
+
       </div>
     </div>
   </div>

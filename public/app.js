@@ -996,3 +996,13 @@ function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
+
+window.openGuideModal = function() {
+  const modal = document.getElementById('guideModal');
+  if (modal) modal.classList.add('open');
+};
+
+window.closeGuideModal = function() {
+  const modal = document.getElementById('guideModal');
+  if (modal) modal.classList.remove('open');
+};
