@@ -2174,3 +2174,238 @@ input:checked + .toggle-slider:before {
   padding-bottom: 1.25rem;
 }
 
+/* ==========================================================
+   LANDING PAGE GRIDS, CARDS, AND PRICING (3-COLUMN LAYOUT)
+   ========================================================== */
+
+.section-title {
+  text-align: center;
+  margin: 5rem 0 3rem 0;
+  position: relative;
+}
+
+.section-title h2 {
+  font-size: 2.3rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 40%, #ff1361 80%, #00f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.section-title p {
+  font-size: 1rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* 3-Column Features Grid */
+.features-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1.75rem !important;
+  margin: 3rem 0 5rem 0 !important;
+}
+
+@media (max-width: 1024px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 650px) {
+  .features-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.feature-card {
+  background: rgba(18, 20, 30, 0.75) !important;
+  border: 1px solid var(--border-glass) !important;
+  border-radius: 20px !important;
+  padding: 2.2rem 1.8rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 1rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(14px) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+.feature-icon {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #ff1361 0%, #9000ff 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.5rem !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px rgba(255, 19, 97, 0.35) !important;
+  flex-shrink: 0 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.feature-card.f2 .feature-icon {
+  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%) !important;
+  box-shadow: 0 8px 20px rgba(0, 242, 254, 0.35) !important;
+}
+
+.feature-card.f3 .feature-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35) !important;
+}
+
+.feature-card h3 {
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  line-height: 1.3 !important;
+}
+
+.feature-card p {
+  font-size: 0.88rem !important;
+  color: var(--text-muted) !important;
+  line-height: 1.6 !important;
+}
+
+/* 3-Column Pricing Grid */
+.pricing-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 2rem !important;
+  margin: 3rem 0 5rem 0 !important;
+  align-items: stretch !important;
+}
+
+@media (max-width: 1024px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .pricing-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.pricing-card {
+  background: rgba(18, 20, 30, 0.8) !important;
+  border: 1px solid var(--border-glass) !important;
+  border-radius: 24px !important;
+  padding: 2.5rem 2rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
+  height: 100% !important;
+}
+
+.pricing-card.popular {
+  border-color: #ff1361 !important;
+  box-shadow: 0 15px 60px rgba(255, 19, 97, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-8px);
+}
+
+.popular-ribbon {
+  position: absolute !important;
+  top: 1.25rem !important;
+  right: 1.5rem !important;
+  background: linear-gradient(90deg, #ff1361 0%, #9000ff 100%) !important;
+  color: #fff !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  padding: 0.3rem 0.8rem !important;
+  border-radius: 50px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  box-shadow: 0 0 15px rgba(255, 19, 97, 0.5) !important;
+}
+
+.price-header h3 {
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  margin-bottom: 0.3rem !important;
+}
+
+.price-header p {
+  font-size: 0.85rem !important;
+  color: var(--text-muted) !important;
+}
+
+.price-value {
+  font-size: 2.8rem !important;
+  font-weight: 900 !important;
+  margin: 1.5rem 0 !important;
+  display: flex !important;
+  align-items: baseline !important;
+  color: #fff !important;
+}
+
+.price-value span.period {
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  color: var(--text-muted) !important;
+  margin-left: 0.3rem !important;
+}
+
+.price-features {
+  list-style: none !important;
+  margin: 1rem 0 2.5rem 0 !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.85rem !important;
+  padding: 0 !important;
+}
+
+.price-features li {
+  font-size: 0.9rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.65rem !important;
+  color: var(--text-main) !important;
+}
+
+.price-features li i {
+  color: #10b981 !important;
+  font-size: 0.95rem !important;
+  flex-shrink: 0 !important;
+}
+
+.pricing-card .btn {
+  margin-top: auto !important;
+  width: 100% !important;
+  text-align: center !important;
+  justify-content: center !important;
+  padding: 0.9rem 1.5rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+}
+
