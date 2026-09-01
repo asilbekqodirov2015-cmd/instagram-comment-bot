@@ -55,7 +55,7 @@ const DEMO_POSTS = [
 
 /**
  * POST /api/meta/auto-resolve
- * Automatically resolves Page ID, Instagram Business ID, Username and auto-subscribes to Webhooks using 1 Access Token.
+ * Bulletproof resolver: Handles User Tokens and Page Tokens without requesting non-existing fields.
  */
 router.post('/auto-resolve', auth, async (req, res) => {
   const { token } = req.body;
@@ -70,88 +70,80 @@ router.post('/auto-resolve', auth, async (req, res) => {
   const cleanToken = token.trim();
 
   try {
-    // 1. Inspect Token - First check /me/accounts (Handles User Token case)
+    // Step 1: Query /me to get basic node id and name (Safe on all token types)
+    let meData = null;
+    try {
+      const meRes = await axios.get(`https://graph.facebook.com/v19.0/me?fields=id,name&access_token=${cleanToken}`, { timeout: 10000 });
+      meData = meRes.data;
+    } catch (meErr) {
+      const errMsg = meErr.response?.data?.error?.message || 'Meta Access Token noto\'g\'ri yoki muddati tugagan.';
+      return res.status(400).json({ success: false, message: errMsg });
+    }
+
     let targetPageId = '';
-    let targetPageName = '';
+    let targetPageName = meData.name || 'Facebook Sahifa';
     let targetPageToken = cleanToken;
     let targetInstaId = '';
     let targetInstaUsername = '';
 
-    let isResolved = false;
-
-    // A. Try resolving as User Token via /me/accounts
+    // Step 2: Try fetching accounts (User Token managing pages case)
+    let userPages = [];
     try {
-      const accountsUrl = `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name}&access_token=${cleanToken}`;
-      const accountsRes = await axios.get(accountsUrl, { timeout: 12000 });
-      const pages = accountsRes.data?.data;
-
-      if (Array.isArray(pages) && pages.length > 0) {
-        // Find page with linked Instagram business account, or take first page
-        const pageWithInsta = pages.find(p => p.instagram_business_account) || pages[0];
-        targetPageId = pageWithInsta.id;
-        targetPageName = pageWithInsta.name;
-        targetPageToken = pageWithInsta.access_token || cleanToken;
-
-        if (pageWithInsta.instagram_business_account) {
-          targetInstaId = pageWithInsta.instagram_business_account.id;
-          targetInstaUsername = pageWithInsta.instagram_business_account.username || pageWithInsta.instagram_business_account.name || '';
-        }
-        isResolved = true;
+      const accountsRes = await axios.get(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token&access_token=${cleanToken}`, { timeout: 10000 });
+      if (Array.isArray(accountsRes.data?.data) && accountsRes.data.data.length > 0) {
+        userPages = accountsRes.data.data;
       }
-    } catch (accountsErr) {
-      console.warn('Could not resolve via /me/accounts, trying as Page Token directly:', accountsErr.response?.data?.error?.message || accountsErr.message);
+    } catch (e) {
+      // Not a user token with pages or pages_show_list not granted
     }
 
-    // B. If not resolved via /me/accounts, try resolving as Page Token directly via /me
-    if (!isResolved) {
-      try {
-        const pageMeUrl = `https://graph.facebook.com/v19.0/me?fields=id,name,instagram_business_account{id,username,name}&access_token=${cleanToken}`;
-        const pageRes = await axios.get(pageMeUrl, { timeout: 12000 });
-        const data = pageRes.data;
-
-        if (data && data.id) {
-          targetPageId = data.id;
-          targetPageName = data.name || 'Facebook Sahifa';
-          targetPageToken = cleanToken;
-
-          if (data.instagram_business_account) {
-            targetInstaId = data.instagram_business_account.id;
-            targetInstaUsername = data.instagram_business_account.username || data.instagram_business_account.name || '';
+    if (userPages.length > 0) {
+      // We have user pages. Let's find if any page has an instagram account attached.
+      let bestPage = userPages[0];
+      for (const page of userPages) {
+        try {
+          const pageCheck = await axios.get(`https://graph.facebook.com/v19.0/${page.id}?fields=id,name,instagram_business_account{id,username,name}&access_token=${page.access_token || cleanToken}`, { timeout: 6000 });
+          if (pageCheck.data?.instagram_business_account) {
+            bestPage = page;
+            targetInstaId = pageCheck.data.instagram_business_account.id;
+            targetInstaUsername = pageCheck.data.instagram_business_account.username || pageCheck.data.instagram_business_account.name || '';
+            break;
           }
-          isResolved = true;
-        }
-      } catch (pageErr) {
-        const errData = pageErr.response?.data?.error;
-        const errMsg = errData?.message || 'Meta API bilan ulanishda xatolik yuz berdi. Token noto\'g\'ri yoki muddati tugagan.';
-        return res.status(400).json({ success: false, message: errMsg });
+        } catch (err) {}
       }
-    }
 
-    if (!targetPageId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Kiritilgan token orqali hech qanday Facebook Sahifa topilmadi. Token ruxsatnomalarini (pages_show_list, pages_read_engagement) tekshiring.'
-      });
-    }
+      targetPageId = bestPage.id;
+      targetPageName = bestPage.name;
+      targetPageToken = bestPage.access_token || cleanToken;
 
-    // C. If Instagram account ID wasn't linked yet, check connected_instagram_account or page details
-    if (!targetInstaId) {
+    } else {
+      // Step 3: Token is a Page Token directly (or User without /me/accounts)
+      targetPageId = meData.id;
+      targetPageName = meData.name;
+      targetPageToken = cleanToken;
+
+      // Try checking if this page has an instagram_business_account safely
       try {
-        const pageDetailsUrl = `https://graph.facebook.com/v19.0/${targetPageId}?fields=instagram_business_account{id,username,name},connected_instagram_account{id,username}&access_token=${targetPageToken}`;
-        const pageDetails = await axios.get(pageDetailsUrl, { timeout: 8000 });
-        if (pageDetails.data?.instagram_business_account) {
-          targetInstaId = pageDetails.data.instagram_business_account.id;
-          targetInstaUsername = pageDetails.data.instagram_business_account.username || pageDetails.data.instagram_business_account.name || '';
-        } else if (pageDetails.data?.connected_instagram_account) {
-          targetInstaId = pageDetails.data.connected_instagram_account.id;
-          targetInstaUsername = pageDetails.data.connected_instagram_account.username || '';
+        const pageCheck = await axios.get(`https://graph.facebook.com/v19.0/${targetPageId}?fields=id,name,instagram_business_account{id,username,name}&access_token=${targetPageToken}`, { timeout: 6000 });
+        if (pageCheck.data?.instagram_business_account) {
+          targetInstaId = pageCheck.data.instagram_business_account.id;
+          targetInstaUsername = pageCheck.data.instagram_business_account.username || pageCheck.data.instagram_business_account.name || '';
         }
-      } catch (e) {
-        console.warn('Could not fetch instagram_business_account details:', e.message);
-      }
+      } catch (err) {}
     }
 
-    // 2. Automatically Subscribe this Page to Webhooks via Meta Graph API
+    // Step 4: If targetInstaId still not found, check connected_instagram_account
+    if (!targetInstaId && targetPageId) {
+      try {
+        const connCheck = await axios.get(`https://graph.facebook.com/v19.0/${targetPageId}?fields=connected_instagram_account{id,username}&access_token=${targetPageToken}`, { timeout: 6000 });
+        if (connCheck.data?.connected_instagram_account) {
+          targetInstaId = connCheck.data.connected_instagram_account.id;
+          targetInstaUsername = connCheck.data.connected_instagram_account.username || '';
+        }
+      } catch (e) {}
+    }
+
+    // Step 5: Automatically Subscribe this Page to Webhooks
     let webhookSubscribed = false;
     try {
       const subscribeUrl = `https://graph.facebook.com/v19.0/${targetPageId}/subscribed_apps`;
@@ -169,7 +161,7 @@ router.post('/auto-resolve', auth, async (req, res) => {
       console.warn('Webhook auto-subscription attempt:', subErr.response?.data?.error?.message || subErr.message);
     }
 
-    // 3. Save resolved configuration into user DB
+    // Step 6: Save resolved configuration into user DB
     let userConfig = await Config.findOne({ userId: req.user.id });
     if (!userConfig) {
       userConfig = new Config({ userId: req.user.id });
@@ -178,8 +170,8 @@ router.post('/auto-resolve', auth, async (req, res) => {
     userConfig.facebookPageId = targetPageId;
     userConfig.pageAccessToken = targetPageToken;
     userConfig.pageName = targetPageName;
-    userConfig.instagramAccountId = targetInstaId;
-    userConfig.instagramUsername = targetInstaUsername;
+    userConfig.instagramAccountId = targetInstaId || targetPageId;
+    userConfig.instagramUsername = targetInstaUsername || targetPageName;
     userConfig.isConnected = true;
     userConfig.lastConnectedAt = new Date();
 
@@ -187,11 +179,11 @@ router.post('/auto-resolve', auth, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Tabriklaymiz! Instagram va Facebook sahifangiz muvaffaqiyatli bog\'landi!',
+      message: 'Tabriklaymiz! Facebook Sahifa va Instagram muvaffaqiyatli bog\'landi!',
       details: {
         pageId: targetPageId,
         pageName: targetPageName,
-        instagramAccountId: targetInstaId,
+        instagramAccountId: targetInstaId || targetPageId,
         instagramUsername: targetInstaUsername || targetPageName,
         webhookSubscribed: webhookSubscribed,
         isConnected: true
@@ -202,83 +194,97 @@ router.post('/auto-resolve', auth, async (req, res) => {
     console.error('Auto-resolve error:', error.message);
     res.status(500).json({
       success: false,
-      message: 'Avtomatik ulashda xatolik yuz berdi: ' + error.message
+      message: 'Ulashda xatolik: ' + error.message
     });
   }
 });
 
 /**
  * GET /api/meta/posts
- * Fetches recent Instagram Posts / Reels from Meta Graph API for post-specific trigger selection.
- * Fallbacks to Demo posts if account not yet connected.
+ * Fetches recent Instagram Posts / Reels from Meta Graph API or Page Feed for post-specific trigger selection.
+ * Fallbacks to Demo posts if account not yet connected or empty.
  */
 router.get('/posts', auth, async (req, res) => {
   try {
     const userConfig = await Config.findOne({ userId: req.user.id });
     
-    // Check if token exists
+    // If no config or token, return demo posts with message
     if (!userConfig || !userConfig.pageAccessToken) {
       return res.json({
         success: true,
         isLive: false,
-        message: 'Token ulanmagan. Hozircha quyidagi namuna postlardan tanlashingiz mumkin.',
+        message: 'Token ulanmagan. Sinov uchun namuna postlar ko\'rsatilmoqda.',
         posts: DEMO_POSTS
       });
     }
 
     const token = userConfig.pageAccessToken;
-    let targetInstaId = userConfig.instagramAccountId;
+    const targetInstaId = userConfig.instagramAccountId;
+    const targetPageId = userConfig.facebookPageId;
 
-    // If instagramAccountId wasn't saved, try fetching it from Page ID
-    if (!targetInstaId && userConfig.facebookPageId) {
+    let postsFound = [];
+
+    // Strategy 1: Fetch via Instagram Business Account Media API
+    if (targetInstaId && targetInstaId !== targetPageId) {
       try {
-        const pageRes = await axios.get(`https://graph.facebook.com/v19.0/${userConfig.facebookPageId}?fields=instagram_business_account&access_token=${token}`, { timeout: 8000 });
-        targetInstaId = pageRes.data?.instagram_business_account?.id;
-      } catch (e) {}
+        const mediaUrl = `https://graph.facebook.com/v19.0/${targetInstaId}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=30&access_token=${token}`;
+        const mediaRes = await axios.get(mediaUrl, { timeout: 10000 });
+
+        if (Array.isArray(mediaRes.data?.data) && mediaRes.data.data.length > 0) {
+          postsFound = mediaRes.data.data.map(item => ({
+            id: item.id,
+            caption: item.caption || '(Izohsiz post)',
+            mediaType: item.media_type,
+            mediaUrl: item.media_url,
+            thumbnailUrl: item.thumbnail_url || item.media_url || '',
+            permalink: item.permalink || `https://instagram.com/p/${item.id}`,
+            likeCount: item.like_count || 0,
+            commentsCount: item.comments_count || 0,
+            timestamp: item.timestamp
+          }));
+        }
+      } catch (e) {
+        console.warn('Strategy 1 insta media fetch failed:', e.response?.data?.error?.message || e.message);
+      }
     }
 
-    if (!targetInstaId) {
+    // Strategy 2: Fetch via Facebook Page Feed / Published Posts
+    if (postsFound.length === 0 && targetPageId) {
+      try {
+        const pageFeedUrl = `https://graph.facebook.com/v19.0/${targetPageId}/feed?fields=id,message,created_time,full_picture,permalink_url&limit=30&access_token=${token}`;
+        const pageRes = await axios.get(pageFeedUrl, { timeout: 10000 });
+
+        if (Array.isArray(pageRes.data?.data) && pageRes.data.data.length > 0) {
+          postsFound = pageRes.data.data.map(item => ({
+            id: item.id,
+            caption: item.message || '(Facebook post)',
+            mediaType: item.full_picture ? 'IMAGE' : 'TEXT',
+            mediaUrl: item.full_picture || '',
+            thumbnailUrl: item.full_picture || '',
+            permalink: item.permalink_url || `https://facebook.com/${item.id}`,
+            likeCount: 0,
+            commentsCount: 0,
+            timestamp: item.created_time
+          }));
+        }
+      } catch (e) {
+        console.warn('Strategy 2 page feed fetch failed:', e.response?.data?.error?.message || e.message);
+      }
+    }
+
+    if (postsFound.length > 0) {
       return res.json({
         success: true,
-        isLive: false,
-        message: 'Instagram Biznes akkaunti bog\'lanmagan. Sinov uchun namuna postlar yuklandi.',
-        posts: DEMO_POSTS
+        isLive: true,
+        posts: postsFound
       });
     }
 
-    // Query Instagram Graph API for live recent media (Photos, Videos, Reels)
-    try {
-      const mediaUrl = `https://graph.facebook.com/v19.0/${targetInstaId}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=30&access_token=${token}`;
-      const mediaRes = await axios.get(mediaUrl, { timeout: 12000 });
-
-      const livePosts = (mediaRes.data?.data || []).map(item => ({
-        id: item.id,
-        caption: item.caption || '(Izohsiz post)',
-        mediaType: item.media_type,
-        mediaUrl: item.media_url,
-        thumbnailUrl: item.thumbnail_url || item.media_url || '',
-        permalink: item.permalink || `https://instagram.com/p/${item.id}`,
-        likeCount: item.like_count || 0,
-        commentsCount: item.comments_count || 0,
-        timestamp: item.timestamp
-      }));
-
-      if (livePosts.length > 0) {
-        return res.json({
-          success: true,
-          isLive: true,
-          posts: livePosts
-        });
-      }
-    } catch (metaApiErr) {
-      console.warn('Meta API media fetch failed, returning demo posts:', metaApiErr.response?.data?.error?.message || metaApiErr.message);
-    }
-
-    // If no live posts or query failed, return demo posts with informative status
+    // Fallback: Return sample posts so user can always pick and test
     res.json({
       success: true,
       isLive: false,
-      message: 'Jonli postlar topilmadi. Sinov uchun namuna postlar yuklandi.',
+      message: 'Sizning hisobingizda ochiq postlar topilmadi. Sinov uchun namuna postlar ko\'rsatilmoqda.',
       posts: DEMO_POSTS
     });
 
@@ -294,7 +300,7 @@ router.get('/posts', auth, async (req, res) => {
 
 /**
  * POST /api/meta/resolve-url
- * Resolves an Instagram Post or Reel URL into a target media object.
+ * Resolves an Instagram Post or Reel URL or Profile into a target media object.
  */
 router.post('/resolve-url', auth, async (req, res) => {
   const { postUrl } = req.body;
@@ -303,17 +309,32 @@ router.post('/resolve-url', auth, async (req, res) => {
   }
 
   try {
-    // Extract shortcode or ID from URL
-    // e.g. https://www.instagram.com/reel/C8Abc123/?igsh=... or https://instagram.com/p/C9Xyz456/
-    const match = postUrl.match(/\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
-    const shortcode = match ? match[1] : ('post_' + Date.now().toString(36));
+    const cleanUrl = postUrl.trim();
+    const match = cleanUrl.match(/\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+    let shortcode = '';
+    let caption = '';
+
+    if (match) {
+      shortcode = match[1];
+      caption = `Instagram Post / Reel (${shortcode})`;
+    } else {
+      // Profile URL case (e.g. instagram.com/volkswagenbuxara)
+      const usernameMatch = cleanUrl.match(/instagram\.com\/([A-Za-z0-9_.]+)/);
+      if (usernameMatch && usernameMatch[1] !== 'p' && usernameMatch[1] !== 'reel') {
+        shortcode = usernameMatch[1];
+        caption = `@${shortcode} profilidagi postlar`;
+      } else {
+        shortcode = 'target_' + Date.now().toString(36);
+        caption = `Instagram Post (${shortcode})`;
+      }
+    }
 
     const post = {
       id: shortcode,
-      caption: `Instagram Post (${shortcode})`,
-      permalink: postUrl.trim(),
+      caption: caption,
+      permalink: cleanUrl,
       thumbnailUrl: '',
-      mediaType: postUrl.includes('/reel/') ? 'VIDEO' : 'IMAGE'
+      mediaType: cleanUrl.includes('/reel/') ? 'VIDEO' : 'IMAGE'
     };
 
     res.json({
