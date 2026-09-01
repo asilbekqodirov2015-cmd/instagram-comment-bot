@@ -1405,9 +1405,772 @@ textarea::placeholder {
 /* Footer styling */
 .main-footer {
   text-align: center;
-  margin-top: 2rem;
-  padding-top: 1rem;
+  margin-top: 4rem;
+  padding: 2.5rem 1rem;
   border-top: 1px solid var(--border-glass);
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  background: rgba(10, 12, 18, 0.4);
 }
+
+/* ==========================================================
+   3D, NEON, AND LIVE DEMO SIMULATION STYLES
+   ========================================================== */
+
+/* 3D WebGL Canvas Layer */
+#bg-canvas-3d {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* Mouse Spotlight Cursor Glow */
+.mouse-spotlight {
+  position: fixed;
+  top: -150px;
+  left: -150px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 19, 97, 0.15) 0%, rgba(144, 0, 255, 0.08) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  transform: translate(-500px, -500px);
+  transition: opacity 0.3s ease;
+  will-change: transform;
+}
+
+/* Scroll Progress Bar */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, #ff1361, #9000ff, #00f2fe);
+  z-index: 1000;
+  box-shadow: 0 0 10px rgba(255, 19, 97, 0.8);
+  transition: width 0.1s linear;
+}
+
+/* Hero Section 3D & Tech Badges */
+.hero-tech-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: linear-gradient(135deg, rgba(255, 19, 97, 0.12), rgba(144, 0, 255, 0.12));
+  border: 1px solid rgba(255, 19, 97, 0.35);
+  padding: 0.5rem 1.25rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2rem;
+  box-shadow: 0 0 25px rgba(255, 19, 97, 0.25);
+  backdrop-filter: blur(10px);
+  animation: badgeGlowPulse 3s infinite alternate;
+}
+
+.hero-tech-badge i {
+  color: #ff1361;
+  font-size: 1rem;
+}
+
+.hero-floating-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0 3rem 0;
+}
+
+.floating-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  padding: 0.4rem 1rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-main);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.floating-pill i {
+  color: var(--primary);
+}
+
+.floating-pill:hover {
+  background: rgba(255, 19, 97, 0.1);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--primary-glow);
+}
+
+/* 3D Tilt Card Base */
+.tilt-card {
+  transition: transform 0.15s ease-out, box-shadow 0.3s ease, border-color 0.3s ease;
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+/* ==========================================================
+   LIVE INTERACTIVE SIMULATOR (2-PHONE SANDBOX)
+   ========================================================== */
+.simulator-section {
+  padding: 4rem 1rem;
+  margin: 2rem 0;
+}
+
+.sim-sandbox-container {
+  background: linear-gradient(180deg, rgba(20, 22, 32, 0.85) 0%, rgba(12, 14, 22, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.sim-sandbox-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.sim-sandbox-header h3 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.sim-sandbox-header p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+}
+
+/* Mode Switcher Tabs */
+.sim-mode-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.sim-mode-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  padding: 0.5rem 1.1rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.25s ease;
+}
+
+.sim-mode-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sim-mode-btn.active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 0 20px var(--primary-glow);
+}
+
+/* 2-Phone Flex Grid */
+.sim-arena {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2rem;
+  position: relative;
+}
+
+@media (max-width: 950px) {
+  .sim-arena {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+/* Phone Device Containers */
+.sim-phone-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sim-phone-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.sim-phone-label.reel i { color: #ff1361; }
+.sim-phone-label.dm i { color: #00f2fe; }
+
+/* Real Phone Frame */
+.sim-phone-frame {
+  width: 100%;
+  max-width: 320px;
+  height: 480px;
+  background: #000;
+  border-radius: 36px;
+  border: 4px solid #2a2d3d;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 19, 97, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.sim-phone-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0c;
+  overflow: hidden;
+}
+
+/* Simulated Reel Overlay */
+.sim-reel-media {
+  height: 140px;
+  background: linear-gradient(180deg, #1f1435 0%, #110d20 100%);
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.75rem;
+}
+
+.sim-reel-video-tag {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #fff;
+}
+
+.sim-reel-caption {
+  font-size: 0.7rem;
+  color: #fff;
+  line-height: 1.3;
+}
+
+/* Scroll Feed */
+.sim-feed-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: #0e0e12;
+}
+
+.comment-meta {
+  font-size: 0.6rem;
+  color: #666;
+  margin-top: 0.2rem;
+}
+
+.verify-badge {
+  color: #00f2fe;
+  font-size: 0.65rem;
+  margin-left: 0.15rem;
+}
+
+/* Simulated Input Bar */
+.sim-comment-bar {
+  padding: 0.5rem 0.75rem;
+  background: #15161e;
+  border-top: 1px solid #232533;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sim-comment-input {
+  flex: 1;
+  background: #0a0a0f !important;
+  border: 1px solid #2b2e40 !important;
+  padding: 0.4rem 0.75rem !important;
+  font-size: 0.75rem !important;
+  border-radius: 20px !important;
+  color: #fff !important;
+}
+
+.sim-send-btn {
+  background: var(--primary);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.sim-send-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+/* Quick Suggestion Chips */
+.sim-chips-container {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sim-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sim-chip:hover {
+  color: #fff;
+  border-color: var(--primary);
+  background: rgba(255, 19, 97, 0.15);
+}
+
+/* ==========================================================
+   MIDDLE CONNECTOR (ENERGY BEAM & STEPS)
+   ========================================================== */
+.sim-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  position: relative;
+}
+
+.sim-beam-track {
+  width: 120px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 950px) {
+  .sim-beam-track {
+    width: 4px;
+    height: 60px;
+  }
+}
+
+.sim-beam-energy {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #ff1361, #00f2fe, transparent);
+  box-shadow: 0 0 15px #00f2fe;
+}
+
+.sim-beam-energy.active {
+  animation: laserShoot 0.8s ease-in-out infinite;
+}
+
+@keyframes laserShoot {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.sim-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.sim-step-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(16, 18, 28, 0.8);
+  border: 1px solid var(--border-glass);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.sim-step-badge.active {
+  border-color: #ff1361;
+  color: #fff;
+  background: rgba(255, 19, 97, 0.15);
+  box-shadow: 0 0 12px rgba(255, 19, 97, 0.3);
+}
+
+.sim-step-badge.completed {
+  border-color: #00f2fe;
+  color: #00f2fe;
+  background: rgba(0, 242, 254, 0.1);
+}
+
+/* ==========================================================
+   INSTAGRAM DIRECT CHAT STYLES (DM Phone)
+   ========================================================== */
+.chat-card-attachment {
+  background: #181a24;
+  border: 1px solid #292d3f;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 200px;
+  margin-left: 0.5rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.dm-card-media-banner {
+  height: 90px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dm-media-icon {
+  font-size: 2.2rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dm-media-tag {
+  position: absolute;
+  bottom: 0.4rem;
+  right: 0.4rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.55rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.dm-card-body {
+  padding: 0.6rem;
+}
+
+.dm-card-body h4 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.dm-card-body p {
+  font-size: 0.65rem;
+  color: #aaa;
+  margin-top: 0.25rem;
+  line-height: 1.3;
+}
+
+.dm-card-price {
+  margin: 0.4rem 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.old-price {
+  font-size: 0.6rem;
+  color: #666;
+  text-decoration: line-through;
+}
+
+.new-price {
+  font-size: 0.75rem;
+  color: #00f2fe;
+  font-weight: 800;
+}
+
+.dm-action-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  font-size: 0.65rem !important;
+  padding: 0.35rem 0.5rem !important;
+  border-radius: 6px !important;
+  width: 100%;
+}
+
+.play-btn-circle {
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* AI Bubble */
+.ai-bubble {
+  background: linear-gradient(135deg, rgba(144, 0, 255, 0.25), rgba(0, 242, 254, 0.15)) !important;
+  border: 1px solid rgba(0, 242, 254, 0.3) !important;
+}
+
+.ai-badge-tiny {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #00f2fe;
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.quick-reply-pills {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.qr-pill {
+  background: rgba(0, 242, 254, 0.15);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  color: #fff;
+  font-size: 0.55rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Typing Dots Animation */
+.typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.8rem !important;
+}
+
+.typing-dots span {
+  width: 5px;
+  height: 5px;
+  background: #aaa;
+  border-radius: 50%;
+  animation: typingBounce 1.2s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+}
+
+/* Animations */
+.animate-pop {
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s ease-out;
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes badgeGlowPulse {
+  0% { box-shadow: 0 0 15px rgba(255, 19, 97, 0.2); }
+  100% { box-shadow: 0 0 35px rgba(255, 19, 97, 0.5); }
+}
+
+/* ==========================================================
+   SCROLL REVEAL & INTERACTIVE FAQ ACCORDION
+   ========================================================== */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Pricing Switcher Toggle */
+.pricing-switch-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem 0 3rem 0;
+}
+
+.switch-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.switch-label.active {
+  color: var(--text-main);
+}
+
+.discount-pill {
+  background: linear-gradient(90deg, #ff1361, #9000ff);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 50px;
+  text-transform: uppercase;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-glass);
+  transition: .3s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 4px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(22px);
+}
+
+/* FAQ Accordion Cards */
+.faq-grid {
+  max-width: 800px;
+  margin: 0 auto 5rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.faq-item {
+  background: rgba(20, 23, 34, 0.7);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.faq-item:hover {
+  border-color: rgba(255, 19, 97, 0.3);
+}
+
+.faq-item.open {
+  border-color: var(--primary);
+  box-shadow: 0 4px 20px var(--primary-glow);
+}
+
+.faq-question {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.faq-question i {
+  color: var(--primary);
+  transition: transform 0.3s ease;
+}
+
+.faq-item.open .faq-question i {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease-out;
+  padding: 0 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.faq-item.open .faq-answer {
+  padding-bottom: 1.25rem;
+}
+
