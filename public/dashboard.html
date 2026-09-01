@@ -963,51 +963,55 @@
 
       <div class="modal-body" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-main);">
         
+        <!-- Recommended Fast Method -->
+        <div style="background: linear-gradient(135deg, rgba(0, 242, 254, 0.1) 0%, rgba(255, 19, 97, 0.1) 100%); border: 1px solid rgba(0, 242, 254, 0.4); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <span style="background: #00f2fe; color: #000; font-weight: 800; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 50px;">ENG OSON VA TEZKOR</span>
+            <h4 style="color: #fff; margin: 0;">⚡ 1-Bosishda Avtomatik Ulash (1 Daqiqa)</h4>
+          </div>
+          <p style="color: var(--text-muted); margin: 0 0 0.75rem 0;">Hech qanday Page ID yoki Webhook sozlamalarisiz, bitta token orqali 100% avtomatik ulash:</p>
+          <ol style="padding-left: 1.2rem; margin: 0; color: #eee;">
+            <li><a href="https://developers.facebook.com" target="_blank" style="color: #00f2fe; text-decoration: underline;">developers.facebook.com</a> ➡️ <strong>Tools ➡️ Graph API Explorer</strong> ga kiring.</li>
+            <li>O'z Facebook Sahifangizni tanlab <strong>"Generate Access Token"</strong> tugmasini bosing va uzun tokenni oling.</li>
+            <li>Dashboarddagi <strong>"⚡ Tezkor Avtomatik Ulash"</strong> maydoniga tokenni tashlab <strong>"🚀 Avtomatik Bog'lash"</strong> tugmasini bosing.</li>
+          </ol>
+          <div style="margin-top: 0.75rem; font-size: 0.8rem; color: #10b981; font-weight: 600;">
+            <i class="fa-solid fa-circle-check"></i> Bo'ldi! Tizim Page ID, Instagram ID va Webhookni o'zi 1 soniyada yoqadi!
+          </div>
+        </div>
+
+        <hr style="border-color: var(--border-glass); margin: 1.5rem 0;">
+
+        <h4 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.75rem;">
+          <i class="fa-solid fa-sliders"></i> Qo'lda Bosqichma-Bosqich Sozlash (Klassik Usul):
+        </h4>
+
         <!-- Step 1 -->
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
-          <h4 style="color: #00f2fe; margin-bottom: 0.5rem;"><i class="fa-solid fa-1"></i>. Instagram Akkauntni Tayyorlash</h4>
-          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted);">
-            <li>Instagram ilovasida: <strong>Sozlamalar ➡️ Hisob turi (Account type) ➡️ Professional/Biznes hisobga o'tish</strong> (Bepul).</li>
-            <li>Facebook-da sahifa (Page) ochib, Instagram profilingizni unga ulang.</li>
-            <li>Instagramda: <strong>Sozlamalar ➡️ Xabarlar (Messages) ➡️ Allow access to messages</strong> ni yoqing.</li>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem;">
+          <h5 style="color: #00f2fe; margin: 0 0 0.4rem 0;"><i class="fa-solid fa-1"></i>. Instagram Akkauntni Tayyorlash</h5>
+          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted); font-size: 0.85rem;">
+            <li>Instagramda: <strong>Sozlamalar ➡️ Hisob turi ➡️ Professional/Biznes hisobga o'tish</strong> (Bepul).</li>
+            <li>Facebook Sahifa (Page) ochib, Instagram profilni unga ulang.</li>
+            <li>Instagramda: <strong>Sozlamalar ➡️ Xabarlar ➡️ Allow access to messages</strong> ni yoqing.</li>
           </ul>
         </div>
 
-        <!-- Step 2 & 3 -->
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
-          <h4 style="color: #ff1361; margin-bottom: 0.5rem;"><i class="fa-solid fa-2"></i>. Meta Tokenlari va Page ID Olish</h4>
-          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted);">
-            <li><a href="https://developers.facebook.com" target="_blank" style="color: #00f2fe;">developers.facebook.com</a> ga kiring va yangi Business ilova yarating.</li>
-            <li><strong>Tools ➡️ Graph API Explorer</strong> bo'limiga kiring.</li>
-            <li>Facebook Sahifangizni tanlang va quyidagi 4 ta ruxsatni qo'shing:
-              <br><code>instagram_basic</code>, <code>instagram_manage_comments</code>, <code>instagram_manage_messages</code>, <code>pages_show_list</code>
-            </li>
-            <li><strong>Generate Access Token</strong> tugmasini bosib, chiqqan <strong>Page Access Token</strong>ni oling.</li>
-            <li><code>me?fields=id,name</code> so'rovini yuborib <strong>Facebook Page ID</strong> raqamini oling.</li>
+        <!-- Step 2 -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem;">
+          <h5 style="color: #ff1361; margin: 0 0 0.4rem 0;"><i class="fa-solid fa-2"></i>. Page Access Token va Page ID Olish</h5>
+          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted); font-size: 0.85rem;">
+            <li>Meta Developer ➡️ <strong>Graph API Explorer</strong> bo'limida sahifangizni tanlang.</li>
+            <li><code>instagram_basic</code>, <code>instagram_manage_comments</code>, <code>instagram_manage_messages</code> ruxsatlari bilan tokenni oling.</li>
+            <li><code>me?fields=id,name</code> orqali Facebook Page ID raqamini oling.</li>
           </ul>
         </div>
 
-        <!-- Step 4 -->
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
-          <h4 style="color: #10b981; margin-bottom: 0.5rem;"><i class="fa-solid fa-3"></i>. Saytimizga Kiritish</h4>
-          <p style="color: var(--text-muted); margin: 0 0 0.5rem 0;">Shaxsiy kabinetingizdagi <strong>Bot Boshqaruvi</strong> bo'limiga kiring:</p>
-          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted);">
-            <li><strong>Facebook Page ID:</strong> Olingan sahifa raqamini yozing.</li>
-            <li><strong>Page Access Token:</strong> Meta-dan olingan tokenni qo'ying.</li>
-            <li><strong>Verify Token:</strong> <code>instagram_bot_secret_token_2026</code> ni yozing.</li>
-            <li>Javob matnlari va DM sozlamalarini kiritib <strong>"Sozlamalarni Saqlash"</strong> tugmasini bosing.</li>
-          </ul>
-        </div>
-
-        <!-- Step 5 -->
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
-          <h4 style="color: #ec4899; margin-bottom: 0.5rem;"><i class="fa-solid fa-4"></i>. Meta Webhookni Ulab Jonli Ishga Tushirish</h4>
-          <p style="color: var(--text-muted); margin: 0 0 0.5rem 0;">Meta Developer ➡️ <strong>Webhooks</strong> ➡️ <strong>Instagram</strong> bo'limida:</p>
-          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted);">
-            <li><strong>Callback URL:</strong> <code>https://instagram-comment-bot-4aeh.onrender.com/webhook</code></li>
-            <li><strong>Verify Token:</strong> <code>instagram_bot_secret_token_2026</code></li>
-            <li><strong>Verify and Save</strong> tugmasini bosing.</li>
-            <li>Pastdagi <code>comments</code> va <code>messages</code> qatorlariga <strong>Subscribe</strong> bosing.</li>
+        <!-- Step 3 -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem;">
+          <h5 style="color: #10b981; margin: 0 0 0.4rem 0;"><i class="fa-solid fa-3"></i>. Saytda Saqlash va Webhook Bog'lash</h5>
+          <ul style="padding-left: 1.2rem; margin: 0; color: var(--text-muted); font-size: 0.85rem;">
+            <li><strong>Qo'lda Kiritish</strong> bo'limiga Page ID va Tokenni kiriting va saqlang.</li>
+            <li>Meta Developer ➡️ <strong>Webhooks</strong> ➡️ <strong>Instagram</strong> bo'limiga Callback URL: <code>https://instagram-comment-bot-4aeh.onrender.com/webhook</code> va Verify Token: <code>instagram_bot_secret_token_2026</code> ni kiriting.</li>
           </ul>
         </div>
 
