@@ -233,6 +233,16 @@ async function loadBotConfig() {
       mentionToggle.checked = (config.mentionUser !== false);
     }
 
+    // Safety Reply Limit (Test Cap)
+    const replyLimitSelect = document.getElementById('replyLimitSelect');
+    const replyCountCurrent = document.getElementById('replyCountCurrent');
+    if (replyLimitSelect) {
+      replyLimitSelect.value = String(config.replyLimit ?? 0);
+    }
+    if (replyCountCurrent) {
+      replyCountCurrent.textContent = String(config.replyCount || 0);
+    }
+
     // Selected Post Data
     if (config.targetMediaId) {
       selectedTargetMediaId = config.targetMediaId;
@@ -455,6 +465,7 @@ if (configForm) {
       triggerType: selectedTrigger,
       keywords: activeKeywords,
       mentionUser: mentionUser,
+      replyLimit: Number(document.getElementById('replyLimitSelect')?.value || 0),
       commentReplies: commentReplies.length > 0 ? commentReplies : ['Javobingizni lizingizga (DM) yubordik! 📩'],
       commentReplyText: commentReplies[0] || 'Javobingizni lizingizga (DM) yubordik! 📩',
       dmType: dmTypeSelect ? dmTypeSelect.value : 'text',
@@ -1423,7 +1434,18 @@ window.openGuideModal = function() {
   if (modal) modal.classList.add('open');
 };
 
-window.closeGuideModal = function() {
-  const modal = document.getElementById('guideModal');
-  if (modal) modal.classList.remove('open');
+window.resetReplyCounter = async function() {
+  if (!confirm('Haqiqatan ham yuborilgan javoblar hisoblagichini 0 ga qaytarmoqchimisiz?')) return;
+  try {
+    const res = await authenticatedFetch('/api/config/reset-count', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      const el = document.getElementById('replyCountCurrent');
+      if (el) el.textContent = '0';
+      alert('Hisoblagich 0 ga qaytarildi! Endi yangidan sinab ko\'rishingiz mumkin. ✅');
+    }
+  } catch (err) {
+    alert('Hisoblagichni tiklashda xatolik.');
+  }
 };
+

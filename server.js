@@ -275,6 +275,18 @@ app.get('/api/stats', auth, async (req, res) => {
   }
 });
 
+// Reset reply count / test counter
+app.post('/api/config/reset-count', auth, async (req, res) => {
+  try {
+    if (isMongoConnected) {
+      await Config.updateOne({ userId: req.user.id }, { replyCount: 0 });
+    }
+    res.json({ success: true, message: 'Javoblar hisoblagichi muvaffaqiyatli 0 ga qaytarildi.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Clear logs
 app.post('/api/logs/clear', auth, async (req, res) => {
   try {
@@ -452,6 +464,15 @@ app.post('/webhook', async (req, res) => {
 
           console.log(`[USER ${activeUserId}] Processing comment from @${commenterUsername} on media ${mediaId}: "${commentText}"`);
 
+          // 0.1 Safety Limit Cap Check (Test / Production limit)
+          const replyLimit = Number(config.replyLimit || 0);
+          const replyCount = Number(config.replyCount || 0);
+
+          if (replyLimit > 0 && replyCount >= replyLimit) {
+            console.log(`[USER ${activeUserId}] Test limit reached (${replyCount}/${replyLimit}). Skipping reply to protect account during testing.`);
+            continue;
+          }
+
           // 1. Keyword check
           let matchesFilter = false;
           if (config.triggerType === 'all') {
@@ -589,6 +610,13 @@ app.post('/webhook', async (req, res) => {
             logEntry.error = logEntry.error 
               ? `${logEntry.error} | DM error: ${apiErr}`
               : `DM error: ${apiErr}`;
+          }
+
+          // Increment reply count for limit tracking
+          if (replySuccess || logEntry.dmStatus === 'success') {
+            if (isMongoConnected) {
+              await Config.updateOne({ userId: activeUserId }, { $inc: { replyCount: 1 } });
+            }
           }
 
           // Write results to log

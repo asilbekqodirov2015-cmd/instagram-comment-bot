@@ -110,6 +110,15 @@ const ConfigSchema = new mongoose.Schema({
     type: String,
     enum: ['friendly', 'professional', 'sales'],
     default: 'friendly'
+  },
+  // Test Mode & Reply Limit Safety Cap
+  replyLimit: {
+    type: Number,
+    default: 0 // 0 means unlimited, or 5, 10, 50
+  },
+  replyCount: {
+    type: Number,
+    default: 0
   }
 }, { timestamps: true });
 
