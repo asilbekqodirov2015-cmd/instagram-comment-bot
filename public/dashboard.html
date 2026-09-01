@@ -3,378 +3,634 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instagram AutoResponder - Premium Admin Panel</title>
+  <title>InstaResponse - SaaS Boshqaruv Paneli</title>
+  
+  <!-- Modern Typography & FontAwesome Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Styles -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-sunset">
   <div class="glass-bg"></div>
-  <div class="app-container">
+
+  <!-- Main App Shell -->
+  <div class="dashboard-shell">
     
-    <!-- Top Header -->
-    <header class="main-header">
-      <div class="logo-area" style="cursor: pointer;" onclick="window.location.href='index.html'">
-        <div class="logo-icon">
-          <i class="fa-brands fa-instagram"></i>
-        </div>
-        <div class="logo-text">
-          <h1>InstaResponse <span class="premium-badge">PRO</span></h1>
-          <span class="subtext">Auto-Reply & DM System</span>
+    <!-- Left Sidebar Navigation -->
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-brand" onclick="window.location.href='index.html'">
+        <div class="brand-icon"><i class="fa-brands fa-instagram"></i></div>
+        <div class="brand-text">
+          <h2>InstaResponse</h2>
+          <span class="plan-badge-dynamic" id="sidebarPlanBadge">PRO</span>
         </div>
       </div>
-      
-      <!-- Theme Switcher and Status -->
-      <div class="header-controls">
-        <div class="theme-switcher">
-          <span class="control-label">Dizayn:</span>
-          <button class="theme-btn sunset active" data-theme="theme-sunset" title="Sunset Orange"></button>
-          <button class="theme-btn midnight" data-theme="theme-midnight" title="Midnight Cyan"></button>
-          <button class="theme-btn cyberpunk" data-theme="theme-cyberpunk" title="Cyberpunk Green"></button>
-        </div>
-        <div class="status-separator"></div>
-        <div class="status-indicator">
-          <div class="pulse-dot"></div>
-          <span class="status-label">Tizim Faol</span>
-        </div>
-        <div class="status-separator"></div>
-        <div class="user-status-info" style="display: flex; align-items: center; gap: 0.75rem;">
-          <span id="userEmailDisplay" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">...</span>
-          <button type="button" id="logoutBtn" class="btn btn-secondary btn-small" style="padding: 0.35rem 0.7rem; font-size: 0.75rem;">
-            <i class="fa-solid fa-right-from-bracket"></i> Chiqish
-          </button>
-        </div>
-      </div>
-    </header>
 
-    <!-- Stats Dashboard Row -->
-    <section class="stats-row">
-      <div class="stats-card total">
-        <div class="stats-icon"><i class="fa-solid fa-comment-dots"></i></div>
-        <div class="stats-info">
-          <h3>Jami Kommentlar</h3>
-          <span class="stats-number" id="statTotal">0</span>
+      <div class="user-profile-widget">
+        <div class="user-avatar-circle" id="userAvatarChar">U</div>
+        <div class="user-info-text">
+          <span class="user-email-text" id="sidebarUserEmail">user@gmail.com</span>
+          <span class="user-role-badge" id="sidebarUserRole">Foydalanuvchi</span>
         </div>
       </div>
-      <div class="stats-card replies">
-        <div class="stats-icon"><i class="fa-solid fa-reply-all"></i></div>
-        <div class="stats-info">
-          <h3>Javob Qaytarilgan</h3>
-          <span class="stats-number" id="statReplies">0</span>
-        </div>
-      </div>
-      <div class="stats-card dms">
-        <div class="stats-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
-        <div class="stats-info">
-          <h3>DM yuborilgan</h3>
-          <span class="stats-number" id="statDMs">0</span>
-        </div>
-      </div>
-      <div class="stats-card failed">
-        <div class="stats-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <div class="stats-info">
-          <h3>Xatoliklar</h3>
-          <span class="stats-number" id="statFailed">0</span>
-        </div>
-      </div>
-    </section>
 
-    <!-- Main Content Grid -->
-    <main class="dashboard-grid">
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="tab-bot">
+          <i class="fa-solid fa-robot"></i>
+          <span>Bot Boshqaruvi</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-ai">
+          <i class="fa-solid fa-brain"></i>
+          <span>Gemini AI Agenti</span>
+          <span class="nav-chip">AI</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-billing">
+          <i class="fa-solid fa-credit-card"></i>
+          <span>Tariflar & To'lovlar</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-logs">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Analitika & Loglar</span>
+        </button>
+
+        <!-- Admin Only Tab (Hidden by default, shown via JS if role === 'admin') -->
+        <button class="nav-item admin-only-tab" id="adminNavBtn" data-tab="tab-admin" style="display: none;">
+          <i class="fa-solid fa-crown"></i>
+          <span>Admin Panel</span>
+          <span class="nav-chip admin">👑 SUPER</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-settings">
+          <i class="fa-solid fa-gear"></i>
+          <span>Sozlamalar</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="theme-switcher-compact">
+          <button class="theme-btn sunset active" data-theme="theme-sunset" title="Sunset"></button>
+          <button class="theme-btn midnight" data-theme="theme-midnight" title="Midnight"></button>
+          <button class="theme-btn cyberpunk" data-theme="theme-cyberpunk" title="Cyberpunk"></button>
+        </div>
+
+        <button type="button" id="logoutBtn" class="btn btn-secondary btn-small logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i> Chiqish
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="dashboard-main-content">
       
-      <!-- Left Column: Settings -->
-      <section class="settings-column">
-        <form id="configForm" class="settings-form">
-          
-          <!-- Meta API Configuration -->
-          <div class="glass-card">
-            <div class="card-header">
-              <i class="fa-solid fa-key header-icon"></i>
-              <h2>Meta API Sozlamalari</h2>
+      <!-- Top Mobile / Status Bar -->
+      <div class="dashboard-top-bar">
+        <div class="top-bar-title">
+          <h1 id="pageTitleHeading">Bot Boshqaruvi</h1>
+          <p id="pageSubtitleText">Instagram Meta API va avtomatik javob sozlamalari</p>
+        </div>
+
+        <div class="top-bar-actions">
+          <div class="status-indicator">
+            <div class="pulse-dot"></div>
+            <span class="status-label">Tizim Faol 24/7</span>
+          </div>
+          <a href="index.html" class="btn btn-secondary btn-small" target="_blank">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Saytni Ko'rish
+          </a>
+        </div>
+      </div>
+
+      <!-- ========================================================
+           TAB 1: BOT BOSHQARUVI (Meta API & Config)
+           ======================================================== -->
+      <section class="tab-pane active" id="tab-bot">
+        
+        <!-- Stats Summary Row -->
+        <div class="stats-row">
+          <div class="stats-card total">
+            <div class="stats-icon"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="stats-info">
+              <h3>Jami Kommentlar</h3>
+              <span class="stats-number" id="statTotal">0</span>
             </div>
-            
-            <div class="card-body">
-              <div class="form-group">
-                <label for="facebookPageId">
-                  Facebook Page ID
-                  <span class="tooltip" data-tooltip="SaaS Webhook yo'naltirishi to'g'ri ishlashi uchun bot bog'langan Facebook Sahifangizning ID raqami."><i class="fa-solid fa-circle-info"></i></span>
-                </label>
-                <div class="input-with-icon">
-                  <i class="fa-solid fa-hashtag input-icon"></i>
-                  <input type="text" id="facebookPageId" name="facebookPageId" placeholder="E.g. 102938475610293" required style="padding-left: 2.4rem;">
+          </div>
+          <div class="stats-card replies">
+            <div class="stats-icon"><i class="fa-solid fa-reply-all"></i></div>
+            <div class="stats-info">
+              <h3>Javob Qaytarilgan</h3>
+              <span class="stats-number" id="statReplies">0</span>
+            </div>
+          </div>
+          <div class="stats-card dms">
+            <div class="stats-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+            <div class="stats-info">
+              <h3>DM Yuborilgan</h3>
+              <span class="stats-number" id="statDMs">0</span>
+            </div>
+          </div>
+          <div class="stats-card failed">
+            <div class="stats-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stats-info">
+              <h3>Xatoliklar</h3>
+              <span class="stats-number" id="statFailed">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Column Grid: Config Form & Live Preview Mockup -->
+        <div class="dashboard-grid">
+          
+          <!-- Left Column: Form -->
+          <div class="settings-column">
+            <form id="configForm" class="settings-form">
+              
+              <!-- Meta API Card -->
+              <div class="glass-card">
+                <div class="card-header">
+                  <i class="fa-solid fa-key header-icon"></i>
+                  <h2>Meta API Sozlamalari</h2>
+                </div>
+                
+                <div class="card-body">
+                  <div class="form-group">
+                    <label for="facebookPageId">
+                      Facebook Page ID
+                      <span class="tooltip" data-tooltip="SaaS Webhook yo'naltirishi ishlashi uchun bot bog'langan Facebook Sahifangizning raqamli ID-si."><i class="fa-solid fa-circle-info"></i></span>
+                    </label>
+                    <div class="input-with-icon">
+                      <i class="fa-solid fa-hashtag input-icon"></i>
+                      <input type="text" id="facebookPageId" name="facebookPageId" placeholder="E.g. 102938475610293" required>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="pageAccessToken">
+                      Page Access Token 
+                      <span class="tooltip" data-tooltip="Meta Developer panelidan olingan maxfiy token."><i class="fa-solid fa-circle-info"></i></span>
+                    </label>
+                    <div class="input-with-icon">
+                      <i class="fa-solid fa-lock input-icon"></i>
+                      <input type="password" id="pageAccessToken" name="pageAccessToken" placeholder="E.g. EAABw2... (yashirin)" required autocomplete="off">
+                      <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('pageAccessToken')">
+                        <i class="fa-solid fa-eye" id="pageAccessToken-eye"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="verifyToken">
+                      Webhook Verify Token
+                      <span class="tooltip" data-tooltip="Meta Webhook sozlamasiga kiritiladigan maxfiy so'z."><i class="fa-solid fa-circle-info"></i></span>
+                    </label>
+                    <div class="input-with-icon">
+                      <i class="fa-solid fa-shield-halved input-icon"></i>
+                      <input type="text" id="verifyToken" name="verifyToken" placeholder="E.g. instagram_bot_secret_token_2026" required>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div class="form-group">
-                <label for="pageAccessToken">
-                  Page Access Token 
-                  <span class="tooltip" data-tooltip="Meta Developer panelidan olingan sahifa tokeni."><i class="fa-solid fa-circle-info"></i></span>
-                </label>
-                <div class="input-with-icon">
-                  <i class="fa-solid fa-lock input-icon"></i>
-                  <input type="password" id="pageAccessToken" name="pageAccessToken" placeholder="E.g. EAABw2... (yashirin)" required autocomplete="off">
-                  <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('pageAccessToken')">
-                    <i class="fa-solid fa-eye" id="pageAccessToken-eye"></i>
-                  </button>
+              <!-- Comment Trigger Settings -->
+              <div class="glass-card">
+                <div class="card-header">
+                  <i class="fa-solid fa-comments header-icon"></i>
+                  <h2>Kommentariya & Triggerlar</h2>
+                </div>
+                
+                <div class="card-body">
+                  <div class="form-group">
+                    <label>Qachon ishga tushsin?</label>
+                    <div class="radio-group">
+                      <label class="radio-label">
+                        <input type="radio" name="triggerType" value="all" checked>
+                        <span class="radio-custom"></span>
+                        <span class="radio-text">Barcha kommentlarga</span>
+                      </label>
+                      <label class="radio-label">
+                        <input type="radio" name="triggerType" value="keywords">
+                        <span class="radio-custom"></span>
+                        <span class="radio-text">Kalit so'zlar bo'yicha</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-group" id="keywordsContainer" style="display: none;">
+                    <label for="keywordsInput">Kalit so'zlar (vergul bilan ajrating)</label>
+                    <div class="input-with-icon">
+                      <i class="fa-solid fa-tags input-icon"></i>
+                      <input type="text" id="keywordsInput" placeholder="E.g. narx, link, buyurtma, info">
+                    </div>
+                    <div id="keywordsBadges" class="badges-container"></div>
+                  </div>
+
+                  <!-- Random Multi-Replies -->
+                  <div class="form-group">
+                    <div class="label-with-action">
+                      <label>Kommentga yoziladigan javob variantlari</label>
+                      <button type="button" class="btn-link" id="addReplyVariantBtn">
+                        <i class="fa-solid fa-plus"></i> Variant qo'shish
+                      </button>
+                    </div>
+                    <p class="input-hint">Meta spam-bloklaridan saqlanish uchun tizim har bir kommentga tasodifiy (random) bitta javobni yuboradi.</p>
+                    <div id="replyVariantsContainer" class="dynamic-inputs-list"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DM Settings -->
+              <div class="glass-card">
+                <div class="card-header">
+                  <i class="fa-solid fa-paper-plane header-icon"></i>
+                  <h2>Direct (DM) Xabar Sozlamalari</h2>
+                </div>
+                
+                <div class="card-body">
+                  <div class="form-group">
+                    <label for="dmType">DM xabar turi</label>
+                    <div class="select-wrapper">
+                      <select id="dmType" name="dmType">
+                        <option value="text">Faqat matn (Text only)</option>
+                        <option value="image">Faqat rasm (Image only)</option>
+                        <option value="video">Faqat video (Video only)</option>
+                        <option value="text_image">Rasm + Matn (Image + Text)</option>
+                        <option value="text_video">Video + Matn (Video + Text)</option>
+                        <option value="ai">Gemini AI Aqlli Agenti</option>
+                      </select>
+                      <i class="fa-solid fa-chevron-down select-arrow"></i>
+                    </div>
+                  </div>
+
+                  <div class="form-group" id="mediaUrlContainer" style="display: none;">
+                    <label for="dmMediaUrl">Rasm yoki Video Havolasi (URL)</label>
+                    <div class="input-with-icon">
+                      <i class="fa-solid fa-link input-icon"></i>
+                      <input type="url" id="dmMediaUrl" name="dmMediaUrl" placeholder="https://misol.com/rasm.jpg">
+                    </div>
+                  </div>
+
+                  <div class="form-group" id="dmTextContainer">
+                    <label for="dmText">Direct orqali yuboriladigan xabar matni</label>
+                    <textarea id="dmText" name="dmText" rows="4" placeholder="DM orqali boradigan matn..."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submit -->
+              <div class="actions-area">
+                <button type="submit" class="btn btn-primary btn-large">
+                  <i class="fa-solid fa-floppy-disk"></i> Sozlamalarni Saqlash
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right Column: Live Instagram Phone Mockup -->
+          <div class="logs-column">
+            
+            <div class="glass-card preview-card">
+              <div class="card-header">
+                <i class="fa-solid fa-mobile-screen-button header-icon"></i>
+                <h2>Jonli Instagram Ko'rinishi</h2>
+                <div class="preview-tabs">
+                  <button type="button" class="preview-tab-btn active" id="tabBtnComments">Kommentlar</button>
+                  <button type="button" class="preview-tab-btn" id="tabBtnDirect">Direct (DM)</button>
                 </div>
               </div>
               
-              <div class="form-group">
-                <label for="verifyToken">
-                  Webhook Verify Token
-                  <span class="tooltip" data-tooltip="Meta Webhook sozlamasiga kiritiladigan maxfiy so'z."><i class="fa-solid fa-circle-info"></i></span>
-                </label>
-                <div class="input-with-icon">
-                  <i class="fa-solid fa-shield-halved input-icon"></i>
-                  <input type="text" id="verifyToken" name="verifyToken" placeholder="E.g. instagram_bot_secret_token_2026" required>
+              <div class="card-body preview-body">
+                <div class="phone-mockup">
+                  <div class="phone-screen">
+                    <div class="phone-status-bar">
+                      <span>9:41</span>
+                      <div class="phone-status-icons">
+                        <i class="fa-solid fa-signal"></i>
+                        <i class="fa-solid fa-wifi"></i>
+                        <i class="fa-solid fa-battery-three-quarters"></i>
+                      </div>
+                    </div>
+                    
+                    <div class="insta-mock-header">
+                      <div class="insta-mock-profile">
+                        <div class="mock-avatar-gradient">
+                          <div class="mock-avatar"><i class="fa-solid fa-user"></i></div>
+                        </div>
+                        <div class="mock-header-text">
+                          <span class="mock-username" id="previewUsername">sizning_sahifangiz</span>
+                          <span class="mock-location">Reel / Video</span>
+                        </div>
+                      </div>
+                      <i class="fa-solid fa-ellipsis"></i>
+                    </div>
+                    
+                    <!-- Comments Tab -->
+                    <div class="insta-mock-view active" id="mockViewComments">
+                      <div class="mock-scroll-area">
+                        <div class="mock-comment-item">
+                          <div class="mock-user-avatar owner">S</div>
+                          <div class="mock-comment-text">
+                            <strong>sizning_sahifangiz</strong> Yangi mahsulotimiz! Fikrlaringizni izohda qoldiring...
+                          </div>
+                        </div>
+                        
+                        <div class="mock-divider">Barcha kommentariyalar</div>
+                        
+                        <div class="mock-comment-item">
+                          <div class="mock-user-avatar commenter">U</div>
+                          <div class="mock-comment-text">
+                            <strong>instatester</strong> <span class="comment-trigger-highlight">narxi qancha?</span>
+                          </div>
+                        </div>
+                        
+                        <div class="mock-comment-item reply-animation" id="mockCommentReplyItem">
+                          <div class="mock-user-avatar owner">S</div>
+                          <div class="mock-comment-text">
+                            <strong>sizning_sahifangiz</strong> <span id="mockReplyTextBubble">Javobingizni lizingizga (DM) yubordik! 📩</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="mock-input-area">
+                        <div class="mock-user-avatar owner sm">S</div>
+                        <div class="mock-input-placeholder">Kommentariya yozing...</div>
+                      </div>
+                    </div>
+
+                    <!-- Direct Tab -->
+                    <div class="insta-mock-view" id="mockViewDirect">
+                      <div class="insta-dm-header">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <div class="dm-header-info">
+                          <div class="mock-user-avatar commenter sm">U</div>
+                          <strong>instatester</strong>
+                        </div>
+                        <div class="dm-header-actions">
+                          <i class="fa-solid fa-phone"></i>
+                          <i class="fa-solid fa-video"></i>
+                        </div>
+                      </div>
+                      
+                      <div class="mock-scroll-area dm-chat-area">
+                        <div class="chat-time">Bugun, 9:41</div>
+                        <div class="chat-system-note">Kommentariyaga javob: "narxi qancha?"</div>
+                        
+                        <div class="chat-bubble-container bot-message" id="mockDmMediaBubble" style="display: none;">
+                          <div class="mock-user-avatar owner xs">S</div>
+                          <div class="chat-media-wrapper">
+                            <div class="chat-media-preview" id="mockDmMediaPreview">
+                              <div class="media-placeholder-icon"><i class="fa-regular fa-image"></i></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="chat-bubble-container bot-message" id="mockDmTextBubble">
+                          <div class="mock-user-avatar owner xs">S</div>
+                          <div class="chat-bubble" id="mockDmTextContent">
+                            Salom! Bizga kommentariya qoldirganingiz uchun rahmat. Siz so'ragan ma'lumotlar shu yerda.
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="mock-dm-input-area">
+                        <i class="fa-solid fa-camera"></i>
+                        <div class="mock-dm-input-placeholder">Xabar yuborish...</div>
+                        <i class="fa-regular fa-face-smile"></i>
+                        <i class="fa-regular fa-image"></i>
+                      </div>
+                    </div>
+
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Comment Trigger Settings -->
-          <div class="glass-card">
-            <div class="card-header">
-              <i class="fa-solid fa-comments header-icon"></i>
-              <h2>Kommentariya va Triggerlar</h2>
-            </div>
-            
-            <div class="card-body">
-              <div class="form-group">
-                <label>Trigger turi (Qachon ishga tushsin?)</label>
-                <div class="radio-group">
-                  <label class="radio-label">
-                    <input type="radio" name="triggerType" value="all" checked>
-                    <span class="radio-custom"></span>
-                    <span class="radio-text">Barcha kommentlarga</span>
-                  </label>
-                  <label class="radio-label">
-                    <input type="radio" name="triggerType" value="keywords">
-                    <span class="radio-custom"></span>
-                    <span class="radio-text">Kalit so'zlar bo'yicha</span>
-                  </label>
-                </div>
+            <!-- Testing Sandbox -->
+            <div class="glass-card">
+              <div class="card-header">
+                <i class="fa-solid fa-flask-vial header-icon"></i>
+                <h2>Botni Tekshirish (Simulyatsiya)</h2>
               </div>
-
-              <!-- Conditional Keywords Input -->
-              <div class="form-group" id="keywordsContainer" style="display: none;">
-                <label for="keywordsInput">Kalit so'zlar (vergul bilan ajrating)</label>
-                <div class="input-with-icon">
-                  <i class="fa-solid fa-tags input-icon"></i>
-                  <input type="text" id="keywordsInput" placeholder="E.g. narx, link, buyurtma, info">
-                </div>
-                <div id="keywordsBadges" class="badges-container"></div>
-              </div>
-
-              <!-- Premium Feature: Random Multiple Replies -->
-              <div class="form-group">
-                <div class="label-with-action">
-                  <label>Kommentga yoziladigan javob variantlari</label>
-                  <button type="button" class="btn-link" id="addReplyVariantBtn">
-                    <i class="fa-solid fa-plus"></i> Variant qo'shish
+              <div class="card-body">
+                <p class="test-desc">Meta-siz botingiz ishlashini simulyatsiya qilib ko'ring:</p>
+                <div class="test-form">
+                  <div class="form-row">
+                    <div class="form-group flex-1">
+                      <label>Test Username</label>
+                      <input type="text" id="testUsername" value="instatester">
+                    </div>
+                    <div class="form-group flex-2">
+                      <label>Test Komment</label>
+                      <input type="text" id="testComment" value="Menga narxi va batafsil ma'lumot bering">
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-accent" id="triggerTestBtn">
+                    <i class="fa-solid fa-play"></i> Testni Ishga Tushirish
                   </button>
                 </div>
-                <p class="input-hint">Meta spam-bloklaridan saqlanish uchun tizim har bir kommentariyaga quyidagi javoblardan birini tasodifiy (random) tanlab yuboradi.</p>
-                <div id="replyVariantsContainer" class="dynamic-inputs-list">
-                  <!-- Dynamic reply text inputs added here -->
-                </div>
+                <div id="testResultAlert" class="alert-box" style="display: none;"></div>
               </div>
             </div>
+
           </div>
 
-          <!-- DM Response Settings -->
-          <div class="glass-card">
-            <div class="card-header">
-              <i class="fa-solid fa-paper-plane header-icon"></i>
-              <h2>Direct (DM) Xabar Sozlamalari</h2>
-            </div>
-            
-            <div class="card-body">
+        </div>
+      </section>
+
+      <!-- ========================================================
+           TAB 2: GEMINI AI SAVDO AGENTI
+           ======================================================== -->
+      <section class="tab-pane" id="tab-ai">
+        <div class="glass-card">
+          <div class="card-header">
+            <i class="fa-solid fa-brain header-icon"></i>
+            <h2>Google Gemini AI Savdo Agenti Sozlamalari</h2>
+          </div>
+          <div class="card-body">
+            <p class="test-desc">
+              Sun'iy intellekt agenti mijozlarning Direct (DM)dagi savollariga do'koningiz ma'lumotlari asosida tabiiy va muloyim javob qaytaradi.
+            </p>
+
+            <form id="aiConfigForm">
               <div class="form-group">
-                <label for="dmType">DM (Lichka) xabar turi</label>
+                <label>AI Agent Holati</label>
+                <div class="toggle-container" style="display: flex; align-items: center; gap: 1rem;">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="aiEnabledToggle">
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span id="aiStatusLabel" style="font-weight: 700; color: var(--success);">Faol</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="aiToneSelect">Muloqot Uslubi (Tone of Voice)</label>
                 <div class="select-wrapper">
-                  <select id="dmType" name="dmType">
-                    <option value="text">Faqat matn (Text only)</option>
-                    <option value="image">Faqat rasm (Image only)</option>
-                    <option value="video">Faqat video (Video only)</option>
-                    <option value="text_image">Rasm + Matn (Image + Text)</option>
-                    <option value="text_video">Video + Matn (Video + Text)</option>
+                  <select id="aiToneSelect">
+                    <option value="friendly">Do'stona va Samimiy (Tavsiya etiladi)</option>
+                    <option value="professional">Rasmiy va Aniq</option>
+                    <option value="sales">Faol Sotuvchi (Aksiyalar va Chegirmalarga yo'naltiruvchi)</option>
                   </select>
                   <i class="fa-solid fa-chevron-down select-arrow"></i>
                 </div>
               </div>
 
-              <!-- Conditional Media URL Input -->
-              <div class="form-group" id="mediaUrlContainer" style="display: none;">
-                <label for="dmMediaUrl">Rasm yoki Video Havolasi (URL)</label>
-                <div class="input-with-icon">
-                  <i class="fa-solid fa-link input-icon"></i>
-                  <input type="url" id="dmMediaUrl" name="dmMediaUrl" placeholder="https://misol.com/rasm.jpg">
-                </div>
-                <p class="input-hint">Rasm/video ochiq internetda va to'g'ridan-to'g'ri faylning o'ziga olib borishi shart.</p>
+              <div class="form-group">
+                <label for="aiSystemPromptInput">
+                  Do'koningiz / Xizmatlaringiz Yo'riqnomasi (System Prompt)
+                  <span class="tooltip" data-tooltip="AI agent aynan nimalarni bilishi kerakligini shu yerga yozing: narxlar, manzillar, yetkazib berish shartlari."><i class="fa-solid fa-circle-info"></i></span>
+                </label>
+                <textarea id="aiSystemPromptInput" rows="6" placeholder="Masalan: Biz ayollar kiyimlari do'konimiz. Yetkazib berish Toshkent bo'ylab 20,000 so'm. 300,000 so'mdan oshsa bepul. Ish vaqtimiz 09:00 dan 20:00 gacha..."></textarea>
               </div>
 
-              <!-- Conditional DM Text Input -->
-              <div class="form-group" id="dmTextContainer">
-                <label for="dmText">DM yuboriladigan xabar matni</label>
-                <textarea id="dmText" name="dmText" rows="4" placeholder="Direct orqali yuboriladigan shaxsiy xabar matni..."></textarea>
-              </div>
-            </div>
+              <button type="submit" class="btn btn-primary btn-large">
+                <i class="fa-solid fa-floppy-disk"></i> AI Sozlamalarini Saqlash
+              </button>
+            </form>
           </div>
-
-          <!-- Submit Buttons -->
-          <div class="actions-area">
-            <button type="submit" class="btn btn-primary btn-large">
-              <i class="fa-solid fa-floppy-disk"></i> Sozlamalarni Saqlash
-            </button>
-          </div>
-        </form>
+        </div>
       </section>
 
-      <!-- Right Column: Live Preview & Logs -->
-      <section class="logs-column">
+      <!-- ========================================================
+           TAB 3: TARIFLAR & TO'LOVLAR (PUL O'TKAZISH / BILLING)
+           ======================================================== -->
+      <section class="tab-pane" id="tab-billing">
         
-        <!-- Premium Feature: Live Instagram Preview Mockup -->
-        <div class="glass-card preview-card">
-          <div class="card-header">
-            <i class="fa-solid fa-mobile-screen-button header-icon"></i>
-            <h2>Instagram Live Preview (Jonli Ko'rinish)</h2>
-            <div class="preview-tabs">
-              <button type="button" class="preview-tab-btn active" id="tabBtnComments">Kommentlar</button>
-              <button type="button" class="preview-tab-btn" id="tabBtnDirect">Direct (DM)</button>
+        <!-- Current Plan Overview Card -->
+        <div class="glass-card current-plan-card">
+          <div class="plan-summary-row">
+            <div class="plan-info-left">
+              <span class="current-plan-subtitle">Sizning Joriy Tarifingiz</span>
+              <h2 class="current-plan-title" id="billingCurrentTierName">Boshlang'ich (FREE)</h2>
+              <p class="current-plan-expiry" id="billingExpiryDate">Muddati: Cheksiz</p>
+            </div>
+            
+            <div class="plan-info-right">
+              <button class="btn btn-accent btn-large" onclick="openPaymentModal('pro')">
+                <i class="fa-solid fa-bolt"></i> Tarifni Oshirish (To'lov Qilish)
+              </button>
             </div>
           </div>
-          
-          <div class="card-body preview-body">
-            
-            <!-- Phone Frame -->
-            <div class="phone-mockup">
-              <div class="phone-screen">
-                <div class="phone-status-bar">
-                  <span>9:41</span>
-                  <div class="phone-status-icons">
-                    <i class="fa-solid fa-signal"></i>
-                    <i class="fa-solid fa-wifi"></i>
-                    <i class="fa-solid fa-battery-three-quarters"></i>
-                  </div>
-                </div>
-                
-                <!-- Instagram Mockup Header -->
-                <div class="insta-mock-header">
-                  <div class="insta-mock-profile">
-                    <div class="mock-avatar-gradient">
-                      <div class="mock-avatar">
-                        <i class="fa-solid fa-user"></i>
-                      </div>
-                    </div>
-                    <div class="mock-header-text">
-                      <span class="mock-username">sizning_sahifangiz</span>
-                      <span class="mock-location">Reel / Video</span>
-                    </div>
-                  </div>
-                  <i class="fa-solid fa-ellipsis"></i>
-                </div>
-                
-                <!-- Instagram Comment Tab View -->
-                <div class="insta-mock-view active" id="mockViewComments">
-                  <div class="mock-scroll-area">
-                    <!-- Post Description -->
-                    <div class="mock-comment-item">
-                      <div class="mock-user-avatar owner">S</div>
-                      <div class="mock-comment-text">
-                        <strong>sizning_sahifangiz</strong> Nyutonning yangi mahsuloti! Fikrlaringizni kommentda qoldiring...
-                      </div>
-                    </div>
-                    
-                    <div class="mock-divider">Barcha kommentariyalar</div>
-                    
-                    <!-- Commenter comment -->
-                    <div class="mock-comment-item">
-                      <div class="mock-user-avatar commenter">U</div>
-                      <div class="mock-comment-text">
-                        <strong>instatester</strong> <span class="comment-trigger-highlight">narxi qancha?</span> batafsil yuboring.
-                      </div>
-                    </div>
-                    
-                    <!-- Bot Reply comment -->
-                    <div class="mock-comment-item reply-animation" id="mockCommentReplyItem">
-                      <div class="mock-user-avatar owner">S</div>
-                      <div class="mock-comment-text">
-                        <strong>sizning_sahifangiz</strong> <span id="mockReplyTextBubble">Javobingizni lizingizga (DM) yubordik! 📩</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="mock-input-area">
-                    <div class="mock-user-avatar owner sm">S</div>
-                    <div class="mock-input-placeholder">Kommentariya qoldiring...</div>
-                  </div>
-                </div>
 
-                <!-- Instagram DM Tab View -->
-                <div class="insta-mock-view" id="mockViewDirect">
-                  <div class="insta-dm-header">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <div class="dm-header-info">
-                      <div class="mock-user-avatar commenter sm">U</div>
-                      <strong>instatester</strong>
-                    </div>
-                    <div class="dm-header-actions">
-                      <i class="fa-solid fa-phone"></i>
-                      <i class="fa-solid fa-video"></i>
-                    </div>
-                  </div>
-                  
-                  <div class="mock-scroll-area dm-chat-area">
-                    <div class="chat-time">Bugun, 9:41</div>
-                    
-                    <!-- Commenter initial comment note -->
-                    <div class="chat-system-note">Kommentariya uchun Direct-javob: "narxi qancha?"</div>
-                    
-                    <!-- Bot media message (conditionally visible) -->
-                    <div class="chat-bubble-container bot-message" id="mockDmMediaBubble" style="display: none;">
-                      <div class="mock-user-avatar owner xs">S</div>
-                      <div class="chat-media-wrapper">
-                        <div class="chat-media-preview" id="mockDmMediaPreview">
-                          <!-- Image/Video goes here -->
-                          <div class="media-placeholder-icon"><i class="fa-regular fa-image"></i></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Bot text message (conditionally visible) -->
-                    <div class="chat-bubble-container bot-message" id="mockDmTextBubble">
-                      <div class="mock-user-avatar owner xs">S</div>
-                      <div class="chat-bubble" id="mockDmTextContent">
-                        Salom! Bizga kommentariya qoldirganingiz uchun rahmat. Siz so'ragan ma'lumotlar shu yerda.
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="mock-dm-input-area">
-                    <i class="fa-solid fa-camera"></i>
-                    <div class="mock-dm-input-placeholder">Xabar yuborish...</div>
-                    <i class="fa-regular fa-face-smile"></i>
-                    <i class="fa-regular fa-image"></i>
-                  </div>
-                </div>
-
-              </div>
+          <!-- Usage Progress Bar -->
+          <div class="usage-meter-box">
+            <div class="usage-meter-header">
+              <span>Oylik Kommentlar Limiti</span>
+              <span id="billingUsageNumbers">14 / 100 ta</span>
             </div>
-
+            <div class="usage-progress-track">
+              <div class="usage-progress-fill" id="billingUsageProgress" style="width: 14%;"></div>
+            </div>
           </div>
         </div>
 
-        <!-- Live Logger -->
+        <!-- Pricing Tiers Grid -->
+        <div class="section-title" style="margin: 3rem 0 1.5rem 0; text-align: left;">
+          <h2>Mavjud Obuna Rejalari</h2>
+          <p>Biznesingiz hajmiga mos tarifni tanlang va to'lovni Payme yoki Click orqali o'tkazing.</p>
+        </div>
+
+        <div class="pricing-grid">
+          
+          <!-- Free Plan -->
+          <div class="glass-card pricing-card tilt-card" id="planCardFree">
+            <div class="price-header">
+              <h3>Boshlang'ich</h3>
+              <p>Yangi akkauntlar uchun</p>
+            </div>
+            <div class="price-value">0 <span class="period">so'm/oy</span></div>
+            <ul class="price-features">
+              <li><i class="fa-solid fa-check"></i> 1 ta Instagram Akkaunt</li>
+              <li><i class="fa-solid fa-check"></i> Oylik 100 ta komment</li>
+              <li><i class="fa-solid fa-check"></i> Faqat matnli javoblar</li>
+            </ul>
+            <button class="btn btn-secondary" disabled>Hozirgi Tarifingiz</button>
+          </div>
+
+          <!-- Pro Plan -->
+          <div class="glass-card pricing-card popular tilt-card" id="planCardPro">
+            <div class="popular-ribbon">Tavsiya Etiladi</div>
+            <div class="price-header">
+              <h3>Professional</h3>
+              <p>O'rta bizneslar va do'konlar uchun</p>
+            </div>
+            <div class="price-value">190,000 <span class="period">so'm/oy</span></div>
+            <ul class="price-features">
+              <li><i class="fa-solid fa-check"></i> 3 ta Instagram Akkaunt</li>
+              <li><i class="fa-solid fa-check"></i> Cheksiz Kommentlar & DMs</li>
+              <li><i class="fa-solid fa-check"></i> Rasm va Video DM javoblar</li>
+              <li><i class="fa-solid fa-check"></i> Anti-Spam tasodifiy javoblar</li>
+              <li><i class="fa-solid fa-check"></i> 24/7 Tezkor Yordam</li>
+            </ul>
+            <button class="btn btn-primary" onclick="openPaymentModal('pro')">
+              <i class="fa-solid fa-credit-card"></i> Pro Tarifga To'lash
+            </button>
+          </div>
+
+          <!-- Business AI Plan -->
+          <div class="glass-card pricing-card tilt-card" id="planCardBusiness">
+            <div class="price-header">
+              <h3>Korporativ (AI)</h3>
+              <p>Gemini AI aqlli savdo agenti bilan</p>
+            </div>
+            <div class="price-value">490,000 <span class="period">so'm/oy</span></div>
+            <ul class="price-features">
+              <li><i class="fa-solid fa-check"></i> Cheksiz Instagram Akkauntlar</li>
+              <li><i class="fa-solid fa-check"></i> Gemini AI Savdo Agenti</li>
+              <li><i class="fa-solid fa-check"></i> Shaxsiy menejer va integratsiya</li>
+              <li><i class="fa-solid fa-check"></i> Ustuvor 24/7 qo'llab-quvvatlash</li>
+            </ul>
+            <button class="btn btn-accent" onclick="openPaymentModal('business')">
+              <i class="fa-solid fa-brain"></i> AI Tarifga To'lash
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Invoices & Payment History Table -->
+        <div class="glass-card" style="margin-top: 3rem;">
+          <div class="card-header">
+            <i class="fa-solid fa-receipt header-icon"></i>
+            <h2>To'lovlar Tarixi (Invoices)</h2>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="logs-table">
+                <thead>
+                  <tr>
+                    <th>Chek Raqami</th>
+                    <th>Sana</th>
+                    <th>Tarif</th>
+                    <th>To'lov Tizimi</th>
+                    <th>Summa</th>
+                    <th>Holati</th>
+                  </tr>
+                </thead>
+                <tbody id="invoicesTableBody">
+                  <tr class="empty-row"><td colspan="6">Hozircha to'lovlar mavjud emas.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================
+           TAB 4: ANALITIKA & LOGLAR
+           ======================================================== -->
+      <section class="tab-pane" id="tab-logs">
         <div class="glass-card log-card">
           <div class="card-header log-header">
             <div class="header-left">
               <i class="fa-solid fa-list-check header-icon"></i>
-              <h2>Faollik Tarixi (Activity Log)</h2>
+              <h2>Faollik Tarixi (Activity Logs)</h2>
             </div>
-            <!-- Filtering UI -->
             <div class="header-right logs-controls">
               <div class="logs-filter-group">
                 <input type="text" id="logsSearchInput" placeholder="User qidirish..." class="logs-search-input">
@@ -407,53 +663,237 @@
                   </tr>
                 </thead>
                 <tbody id="logsTableBody">
-                  <tr class="empty-row">
-                    <td colspan="6">Hozircha faollik yo'q.</td>
+                  <tr class="empty-row"><td colspan="6">Hozircha faollik yo'q.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           TAB 5: SUPER ADMIN BOSHQARUV PANELİ (ADMIN ONLY)
+           ======================================================== -->
+      <section class="tab-pane" id="tab-admin">
+        
+        <!-- Admin Global Platform Stats -->
+        <div class="stats-row">
+          <div class="stats-card total">
+            <div class="stats-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stats-info">
+              <h3>Jami Foydalanuvchilar</h3>
+              <span class="stats-number" id="adminStatUsers">0</span>
+            </div>
+          </div>
+          
+          <div class="stats-card replies">
+            <div class="stats-icon"><i class="fa-solid fa-wallet"></i></div>
+            <div class="stats-info">
+              <h3>Jami Tushum (Daromad)</h3>
+              <span class="stats-number" id="adminStatRevenue">0 so'm</span>
+            </div>
+          </div>
+
+          <div class="stats-card dms">
+            <div class="stats-icon"><i class="fa-solid fa-star"></i></div>
+            <div class="stats-info">
+              <h3>Faol Obunalar (Pro/AI)</h3>
+              <span class="stats-number" id="adminStatSubscriptions">0</span>
+            </div>
+          </div>
+
+          <div class="stats-card failed">
+            <div class="stats-icon"><i class="fa-solid fa-bolt"></i></div>
+            <div class="stats-info">
+              <h3>Jami Ishlangan Botlar</h3>
+              <span class="stats-number" id="adminStatTotalLogs">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- All Platform Users Table -->
+        <div class="glass-card" style="margin-top: 2rem;">
+          <div class="card-header log-header">
+            <div class="header-left">
+              <i class="fa-solid fa-users-gear header-icon"></i>
+              <h2>Foydalanuvchilarni Boshqarish</h2>
+            </div>
+            <div class="header-right">
+              <button type="button" class="btn btn-secondary btn-small" id="refreshAdminUsersBtn">
+                <i class="fa-solid fa-arrows-rotate"></i> Yangilash
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="logs-table">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Roli</th>
+                    <th>Tarifi</th>
+                    <th>Page ID</th>
+                    <th>Registratsiya</th>
+                    <th>Holati</th>
+                    <th>Amallar</th>
                   </tr>
+                </thead>
+                <tbody id="adminUsersTableBody">
+                  <tr class="empty-row"><td colspan="7">Foydalanuvchilar yuklanmoqda...</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
 
-        <!-- Testing Card -->
+      </section>
+
+      <!-- ========================================================
+           TAB 6: PROFIL & XAVFSIZLIK
+           ======================================================== -->
+      <section class="tab-pane" id="tab-settings">
         <div class="glass-card">
           <div class="card-header">
-            <i class="fa-solid fa-flask-vial header-icon"></i>
-            <h2>Tizimni Tekshirish (Local Testing)</h2>
+            <i class="fa-solid fa-user-shield header-icon"></i>
+            <h2>Profil va Xavfsizlik</h2>
           </div>
           <div class="card-body">
-            <p class="test-desc">Meta webhooklarisiz tizim ishlashini simulyatsiya qilib tekshirib ko'rishingiz mumkin.</p>
-            <div class="test-form">
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label for="testUsername">Test Foydalanuvchi nomi</label>
-                  <input type="text" id="testUsername" placeholder="E.g. test_user" value="instatester">
-                </div>
-                <div class="form-group flex-2">
-                  <label for="testComment">Test Kommentariya matni</label>
-                  <input type="text" id="testComment" placeholder="E.g. narxi qancha?" value="Menga narxi va batafsil ma'lumot bering">
+            <div class="form-group">
+              <label>Sizning Emailingiz</label>
+              <input type="text" id="settingsEmailDisplay" disabled style="opacity: 0.8;">
+            </div>
+
+            <div class="form-group">
+              <label>Tizimdagi Rolingiz</label>
+              <input type="text" id="settingsRoleDisplay" disabled style="opacity: 0.8;">
+            </div>
+
+            <hr style="border-color: var(--border-glass); margin: 2rem 0;">
+
+            <h3>Parolni Yangilash</h3>
+            <p class="test-desc">Akkauntingiz xavfsizligini ta'minlash uchun parolingizni muntazam yangilab turing.</p>
+
+            <form id="changePasswordForm">
+              <div class="form-group">
+                <label for="newPassInput">Yangi Parol</label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-key input-icon"></i>
+                  <input type="password" id="newPassInput" placeholder="Kamida 6ta belgi" required minlength="6">
                 </div>
               </div>
-              <button type="button" class="btn btn-accent" id="triggerTestBtn">
-                <i class="fa-solid fa-play"></i> Testni Ishga Tushirish
+
+              <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-lock"></i> Parolni Saqlash
               </button>
-            </div>
-            <div id="testResultAlert" class="alert-box" style="display: none;"></div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ========================================================
+       PAYMENT CHECKOUT MODAL (PAYME / CLICK / UZUM / KARTA)
+       ======================================================== -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-credit-card"></i> Xavfsiz To'lov Oynasi</h3>
+        <button class="modal-close-btn" onclick="closePaymentModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="checkout-plan-summary">
+          <div>
+            <span class="co-sub">Tanlangan Tarif:</span>
+            <h4 id="modalPlanTitle">Professional Reja</h4>
+          </div>
+          <div class="co-price" id="modalPlanPrice">190,000 so'm</div>
+        </div>
+
+        <label class="form-label" style="margin-top: 1rem;">To'lov Tizimini Tanlang:</label>
+        <div class="payment-provider-grid">
+          <div class="provider-pill active" data-provider="payme">
+            <span class="provider-dot"></span>
+            <strong>Payme</strong>
+          </div>
+          <div class="provider-pill" data-provider="click">
+            <span class="provider-dot"></span>
+            <strong>Click Up</strong>
+          </div>
+          <div class="provider-pill" data-provider="uzum">
+            <span class="provider-dot"></span>
+            <strong>Uzum Bank</strong>
+          </div>
+          <div class="provider-pill" data-provider="card">
+            <span class="provider-dot"></span>
+            <strong>Karta (Uzcard/Humo/Visa)</strong>
           </div>
         </div>
 
-      </section>
+        <form id="checkoutForm" style="margin-top: 1.5rem;">
+          <div class="form-group">
+            <label for="cardNumberInput">Karta yoki Telefon Raqami</label>
+            <div class="input-with-icon">
+              <i class="fa-regular fa-credit-card input-icon"></i>
+              <input type="text" id="cardNumberInput" placeholder="8600 •••• •••• ••••" value="8600 5402 1198 4455" required>
+            </div>
+          </div>
 
-    </main>
-    
-    <!-- Footer -->
-    <footer class="main-footer">
-      <p>&copy; 2026 InstaResponse. Built by Antigravity AI for Instagram Business Automation.</p>
-    </footer>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="cardExpiryInput">Amal qilish muddati</label>
+              <input type="text" id="cardExpiryInput" placeholder="MM/YY" value="12/28" required>
+            </div>
+            <div class="form-group flex-1">
+              <label for="cardCvcInput">CVC / Kod</label>
+              <input type="password" id="cardCvcInput" placeholder="•••" value="777" maxlength="4">
+            </div>
+          </div>
 
+          <button type="submit" class="btn btn-accent btn-large" id="paySubmitBtn" style="width: 100%; margin-top: 1rem;">
+            <i class="fa-solid fa-lock"></i> To'lovni Tasdiqlash
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
-  
+
+  <!-- ========================================================
+       ADMIN USER TIER EDIT MODAL
+       ======================================================== -->
+  <div class="modal-overlay" id="adminTierModal">
+    <div class="modal-card sm">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-crown"></i> Foydalanuvchi Tarifini O'zgartirish</h3>
+        <button class="modal-close-btn" onclick="closeAdminTierModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p id="adminModalUserEmail" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;"></p>
+
+        <div class="form-group">
+          <label for="adminSelectTier">Yangi Tarifni Tanlang:</label>
+          <div class="select-wrapper">
+            <select id="adminSelectTier">
+              <option value="free">Boshlang'ich (Free)</option>
+              <option value="pro">Professional (Pro)</option>
+              <option value="business">Korporativ AI (Business)</option>
+            </select>
+            <i class="fa-solid fa-chevron-down select-arrow"></i>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="adminSaveTierBtn" style="width: 100%; margin-top: 1rem;">
+          <i class="fa-solid fa-check"></i> Saqlash
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Core JS -->
   <script src="app.js"></script>
 </body>
 </html>

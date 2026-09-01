@@ -31,7 +31,7 @@ const ConfigSchema = new mongoose.Schema({
   },
   dmType: {
     type: String,
-    enum: ['text', 'image', 'video', 'text_image', 'text_video'],
+    enum: ['text', 'image', 'video', 'text_image', 'text_video', 'ai'],
     default: 'text'
   },
   dmText: {
@@ -49,6 +49,20 @@ const ConfigSchema = new mongoose.Schema({
   verifyToken: {
     type: String,
     default: 'instagram_bot_secret_token_2026'
+  },
+  // Gemini AI Sales Agent Settings
+  aiEnabled: {
+    type: Boolean,
+    default: false
+  },
+  aiSystemPrompt: {
+    type: String,
+    default: 'Siz professional Instagram biznes yordamchisisiz. Mijozlarning so\'rovlariga samimiy, aniq va sotuvni rag\'batlantiruvchi tarzda o\'zbek tilida javob bering.'
+  },
+  aiTone: {
+    type: String,
+    enum: ['friendly', 'professional', 'sales'],
+    default: 'friendly'
   }
 }, { timestamps: true });
 

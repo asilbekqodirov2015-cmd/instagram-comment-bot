@@ -13,7 +13,17 @@ module.exports = function (req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = { id: decoded.id };
+    req.user = { 
+      id: decoded.id,
+      role: decoded.role || 'user',
+      email: decoded.email || ''
+    };
+
+    // Auto promote master developer/owner email to admin
+    if (decoded.email === 'asilbekqodirov2015@gmail.com') {
+      req.user.role = 'admin';
+    }
+
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Yaroqsiz token yoki seans muddati tugagan.' });

@@ -14,6 +14,8 @@ const Log = require('./models/Log');
 // Authentication middleware and routes
 const auth = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
+const billingRoutes = require('./routes/billing');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,8 +25,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Mount Authentication routes
+// Mount Authentication & SaaS routes
 app.use('/api/auth', authRoutes);
+app.use('/api/billing', auth, billingRoutes);
+app.use('/api/admin', auth, adminRoutes);
 
 const CONFIG_PATH = path.join(__dirname, 'config.json');
 const LOGS_PATH = path.join(__dirname, 'logs.json');
