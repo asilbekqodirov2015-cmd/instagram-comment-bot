@@ -70,66 +70,84 @@ router.post('/auto-resolve', auth, async (req, res) => {
   const cleanToken = token.trim();
 
   try {
-    // 1. Inspect Token and retrieve accounts / page / instagram info from Meta Graph API
-    const metaMeUrl = `https://graph.facebook.com/v19.0/me?fields=id,name,accounts{id,name,access_token,instagram_business_account{id,username,name}},instagram_business_account{id,username,name}&access_token=${cleanToken}`;
-    
-    let metaRes;
-    try {
-      metaRes = await axios.get(metaMeUrl, { timeout: 15000 });
-    } catch (apiErr) {
-      const errData = apiErr.response?.data?.error;
-      const errMsg = errData?.message || 'Meta API bilan ulanishda xatolik yuz berdi. Token muddati tugagan yoki ruxsatlar yetarli emas.';
-      return res.status(400).json({ success: false, message: errMsg });
-    }
-
-    const data = metaRes.data;
+    // 1. Inspect Token - First check /me/accounts (Handles User Token case)
     let targetPageId = '';
     let targetPageName = '';
     let targetPageToken = cleanToken;
     let targetInstaId = '';
     let targetInstaUsername = '';
 
-    // Check if token returned pages list (User Token case)
-    if (data.accounts && data.accounts.data && data.accounts.data.length > 0) {
-      const pageWithInsta = data.accounts.data.find(p => p.instagram_business_account) || data.accounts.data[0];
-      targetPageId = pageWithInsta.id;
-      targetPageName = pageWithInsta.name;
-      targetPageToken = pageWithInsta.access_token || cleanToken;
-      
-      if (pageWithInsta.instagram_business_account) {
-        targetInstaId = pageWithInsta.instagram_business_account.id;
-        targetInstaUsername = pageWithInsta.instagram_business_account.username || pageWithInsta.instagram_business_account.name || '';
-      }
-    } else {
-      // Token is a Page Access Token directly
-      targetPageId = data.id;
-      targetPageName = data.name || 'Facebook Sahifa';
-      targetPageToken = cleanToken;
+    let isResolved = false;
 
-      if (data.instagram_business_account) {
-        targetInstaId = data.instagram_business_account.id;
-        targetInstaUsername = data.instagram_business_account.username || data.instagram_business_account.name || '';
+    // A. Try resolving as User Token via /me/accounts
+    try {
+      const accountsUrl = `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name}&access_token=${cleanToken}`;
+      const accountsRes = await axios.get(accountsUrl, { timeout: 12000 });
+      const pages = accountsRes.data?.data;
+
+      if (Array.isArray(pages) && pages.length > 0) {
+        // Find page with linked Instagram business account, or take first page
+        const pageWithInsta = pages.find(p => p.instagram_business_account) || pages[0];
+        targetPageId = pageWithInsta.id;
+        targetPageName = pageWithInsta.name;
+        targetPageToken = pageWithInsta.access_token || cleanToken;
+
+        if (pageWithInsta.instagram_business_account) {
+          targetInstaId = pageWithInsta.instagram_business_account.id;
+          targetInstaUsername = pageWithInsta.instagram_business_account.username || pageWithInsta.instagram_business_account.name || '';
+        }
+        isResolved = true;
+      }
+    } catch (accountsErr) {
+      console.warn('Could not resolve via /me/accounts, trying as Page Token directly:', accountsErr.response?.data?.error?.message || accountsErr.message);
+    }
+
+    // B. If not resolved via /me/accounts, try resolving as Page Token directly via /me
+    if (!isResolved) {
+      try {
+        const pageMeUrl = `https://graph.facebook.com/v19.0/me?fields=id,name,instagram_business_account{id,username,name}&access_token=${cleanToken}`;
+        const pageRes = await axios.get(pageMeUrl, { timeout: 12000 });
+        const data = pageRes.data;
+
+        if (data && data.id) {
+          targetPageId = data.id;
+          targetPageName = data.name || 'Facebook Sahifa';
+          targetPageToken = cleanToken;
+
+          if (data.instagram_business_account) {
+            targetInstaId = data.instagram_business_account.id;
+            targetInstaUsername = data.instagram_business_account.username || data.instagram_business_account.name || '';
+          }
+          isResolved = true;
+        }
+      } catch (pageErr) {
+        const errData = pageErr.response?.data?.error;
+        const errMsg = errData?.message || 'Meta API bilan ulanishda xatolik yuz berdi. Token noto\'g\'ri yoki muddati tugagan.';
+        return res.status(400).json({ success: false, message: errMsg });
       }
     }
 
     if (!targetPageId) {
       return res.status(400).json({
         success: false,
-        message: 'Kiritilgan token orqali hech qanday Facebook Sahifa topilmadi. Token ruxsatnomalarini tekshiring.'
+        message: 'Kiritilgan token orqali hech qanday Facebook Sahifa topilmadi. Token ruxsatnomalarini (pages_show_list, pages_read_engagement) tekshiring.'
       });
     }
 
-    // If Instagram account ID wasn't in the first call, try fetching it directly for this page
+    // C. If Instagram account ID wasn't linked yet, check connected_instagram_account or page details
     if (!targetInstaId) {
       try {
-        const pageDetailsUrl = `https://graph.facebook.com/v19.0/${targetPageId}?fields=instagram_business_account{id,username,name}&access_token=${targetPageToken}`;
-        const pageDetails = await axios.get(pageDetailsUrl, { timeout: 10000 });
+        const pageDetailsUrl = `https://graph.facebook.com/v19.0/${targetPageId}?fields=instagram_business_account{id,username,name},connected_instagram_account{id,username}&access_token=${targetPageToken}`;
+        const pageDetails = await axios.get(pageDetailsUrl, { timeout: 8000 });
         if (pageDetails.data?.instagram_business_account) {
           targetInstaId = pageDetails.data.instagram_business_account.id;
           targetInstaUsername = pageDetails.data.instagram_business_account.username || pageDetails.data.instagram_business_account.name || '';
+        } else if (pageDetails.data?.connected_instagram_account) {
+          targetInstaId = pageDetails.data.connected_instagram_account.id;
+          targetInstaUsername = pageDetails.data.connected_instagram_account.username || '';
         }
       } catch (e) {
-        console.warn('Could not auto-fetch instagram_business_account:', e.message);
+        console.warn('Could not fetch instagram_business_account details:', e.message);
       }
     }
 
