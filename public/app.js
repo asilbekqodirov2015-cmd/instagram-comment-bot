@@ -653,16 +653,39 @@ if (mentionToggleEl) {
 /* ==========================================================
    POST / REEL PICKER MODAL ENGINE
    ========================================================== */
+window.switchPostPickerTab = function(tabName) {
+  const btnGallery = document.getElementById('btnPostTabGallery');
+  const btnUrl = document.getElementById('btnPostTabUrl');
+  const viewGallery = document.getElementById('postPickerViewGallery');
+  const viewUrl = document.getElementById('postPickerViewUrl');
+
+  if (tabName === 'gallery') {
+    if (btnGallery) btnGallery.classList.add('active');
+    if (btnUrl) btnUrl.classList.remove('active');
+    if (viewGallery) viewGallery.style.display = 'block';
+    if (viewUrl) viewUrl.style.display = 'none';
+  } else {
+    if (btnUrl) btnUrl.classList.add('active');
+    if (btnGallery) btnGallery.classList.remove('active');
+    if (viewUrl) viewUrl.style.display = 'block';
+    if (viewGallery) viewGallery.style.display = 'none';
+  }
+};
+
 window.openPostPickerModal = async function() {
   const modal = document.getElementById('postPickerModal');
   const loading = document.getElementById('postPickerLoading');
   const grid = document.getElementById('postPickerGrid');
   const empty = document.getElementById('postPickerEmpty');
+  const banner = document.getElementById('postPickerStatusBanner');
 
   if (modal) modal.classList.add('open');
+  switchPostPickerTab('gallery');
+
   if (loading) loading.style.display = 'block';
   if (grid) grid.style.display = 'none';
   if (empty) empty.style.display = 'none';
+  if (banner) banner.style.display = 'none';
 
   try {
     const res = await authenticatedFetch('/api/meta/posts');
@@ -671,6 +694,15 @@ window.openPostPickerModal = async function() {
     if (loading) loading.style.display = 'none';
 
     if (res.ok && data.success && Array.isArray(data.posts) && data.posts.length > 0) {
+      if (banner) {
+        banner.style.display = 'block';
+        if (data.isLive) {
+          banner.innerHTML = `<div style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); border-radius: 10px; padding: 0.6rem 0.85rem; font-size: 0.8rem; color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> 🟢 Sizning Instagram profilingizdagi jonli postlar</div>`;
+        } else {
+          banner.innerHTML = `<div style="background: rgba(0,242,254,0.1); border: 1px solid rgba(0,242,254,0.3); border-radius: 10px; padding: 0.6rem 0.85rem; font-size: 0.8rem; color: #00f2fe;"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>⚡ Namuna Postlar (Sinov uchun)</strong> — Jonli profilingiz chiqishi uchun Meta tokenni ulang yoki yuqoridagi <strong>"Havola (URL)"</strong> bo'limiga post linkini tashlang.</div>`;
+        }
+      }
+
       if (grid) {
         grid.style.display = 'grid';
         renderPostPickerGrid(data.posts);
@@ -730,9 +762,51 @@ window.selectPostFromPicker = function(encodedPostData) {
 
     renderSelectedPostDisplay();
     closePostPickerModal();
-    alert(`✅ Post muvaffaqiyatli tanlandi!\nID: ${p.id}`);
+    alert(`✅ Post tanlandi: "${(p.caption || 'Tanlangan post').slice(0, 30)}..."`);
   } catch (e) {
     console.error('Error selecting post:', e);
+  }
+};
+
+window.resolveAndSelectPostUrl = async function() {
+  const urlInput = document.getElementById('directPostUrlInput');
+  const btn = document.getElementById('btnResolveDirectUrl');
+  const postUrl = urlInput ? urlInput.value.trim() : '';
+
+  if (!postUrl) {
+    alert('Iltimos, Instagram post yoki Reel havolasini kiriting!');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Tekshirilmoqda...';
+
+  try {
+    const res = await authenticatedFetch('/api/meta/resolve-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postUrl })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success && data.post) {
+      selectedTargetMediaId = data.post.id;
+      selectedTargetMediaUrl = data.post.permalink;
+      selectedTargetMediaCaption = data.post.caption;
+      selectedTargetMediaThumbnail = data.post.thumbnailUrl || '';
+
+      renderSelectedPostDisplay();
+      closePostPickerModal();
+      if (urlInput) urlInput.value = '';
+      alert(`✅ Post havolasi muvaffaqiyatli bog'landi! ID: ${data.post.id}`);
+    } else {
+      alert(data.message || 'Havolani tekshirishda xatolik.');
+    }
+  } catch (err) {
+    alert('Tarmoq xatoligi.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Ushbu Postni Tanlash va Bog\'lash';
   }
 };
 

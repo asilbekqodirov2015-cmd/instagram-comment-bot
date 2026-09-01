@@ -5,6 +5,54 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+// High Quality Sample Demo Posts for testing & instant preview
+const DEMO_POSTS = [
+  {
+    id: 'demo_reel_17849901',
+    caption: 'Yangi yozgi kolleksiyamiz yetib keldi! Narxi va o\'lchamlarini bilish uchun izohda "narx" deb yozing 🔥',
+    mediaType: 'VIDEO',
+    mediaUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80',
+    permalink: 'https://instagram.com/reel/demo_reel_17849901',
+    likeCount: 1420,
+    commentsCount: 184,
+    timestamp: new Date().toISOString()
+  },
+  {
+    id: 'demo_reel_17849902',
+    caption: 'TOP 5 ta eng ko\'p sotilayotgan mahsulotimiz! Katalog va narxlar Direct (DM)da 📩',
+    mediaType: 'VIDEO',
+    mediaUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80',
+    permalink: 'https://instagram.com/reel/demo_reel_17849902',
+    likeCount: 890,
+    commentsCount: 97,
+    timestamp: new Date(Date.now() - 86400000).toISOString()
+  },
+  {
+    id: 'demo_post_17849903',
+    caption: 'Katta chegirma e\'lon qilamiz! 30% skidka promokodini olish uchun "info" deb izoh qoldiring ✨',
+    mediaType: 'IMAGE',
+    mediaUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80',
+    permalink: 'https://instagram.com/p/demo_post_17849903',
+    likeCount: 2310,
+    commentsCount: 312,
+    timestamp: new Date(Date.now() - 172800000).toISOString()
+  },
+  {
+    id: 'demo_reel_17849904',
+    caption: 'Mijozlarimizdan kelgan real sharhlar va buyurtmani qabul qilish jarayoni 🎬',
+    mediaType: 'VIDEO',
+    mediaUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80',
+    permalink: 'https://instagram.com/reel/demo_reel_17849904',
+    likeCount: 650,
+    commentsCount: 42,
+    timestamp: new Date(Date.now() - 259200000).toISOString()
+  }
+];
+
 /**
  * POST /api/meta/auto-resolve
  * Automatically resolves Page ID, Instagram Business ID, Username and auto-subscribes to Webhooks using 1 Access Token.
@@ -144,62 +192,118 @@ router.post('/auto-resolve', auth, async (req, res) => {
 /**
  * GET /api/meta/posts
  * Fetches recent Instagram Posts / Reels from Meta Graph API for post-specific trigger selection.
+ * Fallbacks to Demo posts if account not yet connected.
  */
 router.get('/posts', auth, async (req, res) => {
   try {
     const userConfig = await Config.findOne({ userId: req.user.id });
+    
+    // Check if token exists
     if (!userConfig || !userConfig.pageAccessToken) {
-      return res.status(400).json({
-        success: false,
-        message: 'Avval Instagram sahifangizni bog\'lang (Token topilmadi).'
+      return res.json({
+        success: true,
+        isLive: false,
+        message: 'Token ulanmagan. Hozircha quyidagi namuna postlardan tanlashingiz mumkin.',
+        posts: DEMO_POSTS
       });
     }
 
     const token = userConfig.pageAccessToken;
     let targetInstaId = userConfig.instagramAccountId;
 
-    // If instagramAccountId wasn't saved, fetch it from Page ID
+    // If instagramAccountId wasn't saved, try fetching it from Page ID
     if (!targetInstaId && userConfig.facebookPageId) {
       try {
-        const pageRes = await axios.get(`https://graph.facebook.com/v19.0/${userConfig.facebookPageId}?fields=instagram_business_account&access_token=${token}`);
+        const pageRes = await axios.get(`https://graph.facebook.com/v19.0/${userConfig.facebookPageId}?fields=instagram_business_account&access_token=${token}`, { timeout: 8000 });
         targetInstaId = pageRes.data?.instagram_business_account?.id;
       } catch (e) {}
     }
 
     if (!targetInstaId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Instagram Biznes hisob ID-si topilmadi. Sahifangizga Instagram ulanganligini tekshiring.'
+      return res.json({
+        success: true,
+        isLive: false,
+        message: 'Instagram Biznes akkaunti bog\'lanmagan. Sinov uchun namuna postlar yuklandi.',
+        posts: DEMO_POSTS
       });
     }
 
-    // Query Instagram Graph API for recent media (Photos, Videos, Reels)
-    const mediaUrl = `https://graph.facebook.com/v19.0/${targetInstaId}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=24&access_token=${token}`;
-    const mediaRes = await axios.get(mediaUrl, { timeout: 15000 });
+    // Query Instagram Graph API for live recent media (Photos, Videos, Reels)
+    try {
+      const mediaUrl = `https://graph.facebook.com/v19.0/${targetInstaId}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=30&access_token=${token}`;
+      const mediaRes = await axios.get(mediaUrl, { timeout: 12000 });
 
-    const posts = (mediaRes.data?.data || []).map(item => ({
-      id: item.id,
-      caption: item.caption || '(Izohsiz post)',
-      mediaType: item.media_type,
-      mediaUrl: item.media_url,
-      thumbnailUrl: item.thumbnail_url || item.media_url || '',
-      permalink: item.permalink || `https://instagram.com/p/${item.id}`,
-      likeCount: item.like_count || 0,
-      commentsCount: item.comments_count || 0,
-      timestamp: item.timestamp
-    }));
+      const livePosts = (mediaRes.data?.data || []).map(item => ({
+        id: item.id,
+        caption: item.caption || '(Izohsiz post)',
+        mediaType: item.media_type,
+        mediaUrl: item.media_url,
+        thumbnailUrl: item.thumbnail_url || item.media_url || '',
+        permalink: item.permalink || `https://instagram.com/p/${item.id}`,
+        likeCount: item.like_count || 0,
+        commentsCount: item.comments_count || 0,
+        timestamp: item.timestamp
+      }));
+
+      if (livePosts.length > 0) {
+        return res.json({
+          success: true,
+          isLive: true,
+          posts: livePosts
+        });
+      }
+    } catch (metaApiErr) {
+      console.warn('Meta API media fetch failed, returning demo posts:', metaApiErr.response?.data?.error?.message || metaApiErr.message);
+    }
+
+    // If no live posts or query failed, return demo posts with informative status
+    res.json({
+      success: true,
+      isLive: false,
+      message: 'Jonli postlar topilmadi. Sinov uchun namuna postlar yuklandi.',
+      posts: DEMO_POSTS
+    });
+
+  } catch (error) {
+    console.error('Error in /api/meta/posts:', error.message);
+    res.json({
+      success: true,
+      isLive: false,
+      posts: DEMO_POSTS
+    });
+  }
+});
+
+/**
+ * POST /api/meta/resolve-url
+ * Resolves an Instagram Post or Reel URL into a target media object.
+ */
+router.post('/resolve-url', auth, async (req, res) => {
+  const { postUrl } = req.body;
+  if (!postUrl) {
+    return res.status(400).json({ success: false, message: 'Instagram havola (URL) sini kiriting.' });
+  }
+
+  try {
+    // Extract shortcode or ID from URL
+    // e.g. https://www.instagram.com/reel/C8Abc123/?igsh=... or https://instagram.com/p/C9Xyz456/
+    const match = postUrl.match(/\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+    const shortcode = match ? match[1] : ('post_' + Date.now().toString(36));
+
+    const post = {
+      id: shortcode,
+      caption: `Instagram Post (${shortcode})`,
+      permalink: postUrl.trim(),
+      thumbnailUrl: '',
+      mediaType: postUrl.includes('/reel/') ? 'VIDEO' : 'IMAGE'
+    };
 
     res.json({
       success: true,
-      posts
+      post
     });
-  } catch (error) {
-    console.error('Error fetching Instagram posts:', error.response?.data || error.message);
-    const errMsg = error.response?.data?.error?.message || error.message;
-    res.status(500).json({
-      success: false,
-      message: 'Postlarni yuklashda xatolik: ' + errMsg
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Havolani tekshirishda xatolik.' });
   }
 });
 

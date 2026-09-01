@@ -1086,28 +1086,58 @@
   <div class="modal-overlay" id="postPickerModal">
     <div class="modal-card" style="max-width: 760px; max-height: 85vh; overflow-y: auto;">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-photo-film" style="color: #ff1361;"></i> Profilingizdagi Post yoki Reel-ni Tanlang</h3>
+        <h3><i class="fa-solid fa-photo-film" style="color: #ff1361;"></i> Post yoki Reel-ni Tanlash</h3>
         <button class="modal-close-btn" onclick="closePostPickerModal()">&times;</button>
       </div>
 
       <div class="modal-body">
-        <p class="test-desc">Bot aynan qaysi video yoki rasmingiz ostidagi izohlarga javob qaytarishini tanlang:</p>
         
-        <div id="postPickerLoading" style="text-align: center; padding: 2rem; color: #00f2fe;">
-          <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
-          <p style="margin-top: 0.5rem;">Instagramdan postlaringiz yuklanmoqda...</p>
+        <!-- Post Picker Mode Tabs -->
+        <div class="preview-tabs" style="margin-bottom: 1.25rem;">
+          <button type="button" class="preview-tab-btn active" id="btnPostTabGallery" onclick="switchPostPickerTab('gallery')">
+            <i class="fa-solid fa-grip"></i> Postlar Galereyasi
+          </button>
+          <button type="button" class="preview-tab-btn" id="btnPostTabUrl" onclick="switchPostPickerTab('url')">
+            <i class="fa-solid fa-link"></i> Havola (URL) orqali
+          </button>
         </div>
 
-        <div id="postPickerGrid" class="instagram-posts-grid" style="display: none;"></div>
+        <!-- View 1: Gallery -->
+        <div id="postPickerViewGallery">
+          <div id="postPickerStatusBanner" style="display: none; margin-bottom: 1rem;"></div>
 
-        <div id="postPickerEmpty" style="display: none; text-align: center; padding: 2rem;">
-          <p style="color: var(--text-muted);">Hech qanday post topilmadi yoki token ruxsati yetarli emas.</p>
-          <div class="form-group" style="max-width: 400px; margin: 1rem auto 0 auto;">
-            <label>Post ID yoki URL-ni qo'lda kiritish:</label>
-            <input type="text" id="manualPostIdInput" placeholder="Masalan: 178414002345678">
-            <button type="button" class="btn btn-primary" onclick="selectManualPost()" style="margin-top: 0.5rem; width: 100%;">Tanlash</button>
+          <div id="postPickerLoading" style="text-align: center; padding: 2rem; color: #00f2fe;">
+            <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+            <p style="margin-top: 0.5rem;">Postlaringiz yuklanmoqda...</p>
+          </div>
+
+          <div id="postPickerGrid" class="instagram-posts-grid" style="display: none;"></div>
+
+          <div id="postPickerEmpty" style="display: none; text-align: center; padding: 2rem;">
+            <p style="color: var(--text-muted);">Hech qanday post topilmadi.</p>
           </div>
         </div>
+
+        <!-- View 2: Direct URL Input -->
+        <div id="postPickerViewUrl" style="display: none;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 14px; padding: 1.5rem;">
+            <h4 style="color: #fff; margin-bottom: 0.5rem;"><i class="fa-brands fa-instagram" style="color: #ec4899;"></i> Instagram Post yoki Reel Havolasini Joylang</h4>
+            <p class="input-hint" style="margin-bottom: 1.25rem;">Instagram ilovasidan istalgan video yoki postingizning havolasini (Link) nusxalab bu yerga tashlang:</p>
+
+            <div class="form-group">
+              <label for="directPostUrlInput">Post / Reel Havolasi (URL)</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-link input-icon"></i>
+                <input type="url" id="directPostUrlInput" placeholder="https://www.instagram.com/reel/C8Abc123/...">
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-accent btn-large" id="btnResolveDirectUrl" style="width: 100%; margin-top: 0.75rem;" onclick="resolveAndSelectPostUrl()">
+              <i class="fa-solid fa-check"></i> Ushbu Postni Tanlash va Bog'lash
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
