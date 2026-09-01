@@ -1106,6 +1106,13 @@
         <div id="postPickerViewGallery">
           <div id="postPickerStatusBanner" style="display: none; margin-bottom: 1rem;"></div>
 
+          <div style="margin-bottom: 1rem;">
+            <div class="input-with-icon">
+              <i class="fa-solid fa-magnifying-glass input-icon"></i>
+              <input type="text" id="postSearchFilterInput" placeholder="Post matni yoki so'z bo'yicha qidirish..." oninput="filterPostPickerGrid(this.value)">
+            </div>
+          </div>
+
           <div id="postPickerLoading" style="text-align: center; padding: 2rem; color: #00f2fe;">
             <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
             <p style="margin-top: 0.5rem;">Postlaringiz yuklanmoqda...</p>

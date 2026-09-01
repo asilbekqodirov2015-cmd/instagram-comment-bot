@@ -672,14 +672,18 @@ window.switchPostPickerTab = function(tabName) {
   }
 };
 
+let cachedPickerPosts = [];
+
 window.openPostPickerModal = async function() {
   const modal = document.getElementById('postPickerModal');
   const loading = document.getElementById('postPickerLoading');
   const grid = document.getElementById('postPickerGrid');
   const empty = document.getElementById('postPickerEmpty');
   const banner = document.getElementById('postPickerStatusBanner');
+  const filterInput = document.getElementById('postSearchFilterInput');
 
   if (modal) modal.classList.add('open');
+  if (filterInput) filterInput.value = '';
   switchPostPickerTab('gallery');
 
   if (loading) loading.style.display = 'block';
@@ -694,12 +698,13 @@ window.openPostPickerModal = async function() {
     if (loading) loading.style.display = 'none';
 
     if (res.ok && data.success && Array.isArray(data.posts) && data.posts.length > 0) {
+      cachedPickerPosts = data.posts;
       if (banner) {
         banner.style.display = 'block';
         if (data.isLive) {
-          banner.innerHTML = `<div style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); border-radius: 10px; padding: 0.6rem 0.85rem; font-size: 0.8rem; color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> 🟢 Sizning Instagram profilingizdagi jonli postlar</div>`;
+          banner.innerHTML = `<div style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); border-radius: 10px; padding: 0.6rem 0.85rem; font-size: 0.8rem; color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> 🟢 Sizning Instagram profilingizdagi jonli postlar (${data.posts.length} ta)</div>`;
         } else {
-          banner.innerHTML = `<div style="background: rgba(0,242,254,0.1); border: 1px solid rgba(0,242,254,0.3); border-radius: 10px; padding: 0.6rem 0.85rem; font-size: 0.8rem; color: #00f2fe;"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>⚡ Namuna Postlar (Sinov uchun)</strong> — Jonli profilingiz chiqishi uchun Meta tokenni ulang yoki yuqoridagi <strong>"Havola (URL)"</strong> bo'limiga post linkini tashlang.</div>`;
+          banner.innerHTML = `<div style="background: rgba(0,242,254,0.1); border: 1px solid rgba(0,242,254,0.3); border-radius: 10px; padding: 0.6rem 0.85rem; font-size: 0.8rem; color: #00f2fe;"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>⚡ Namuna Postlar (Sinov uchun)</strong> — Jonli profilingiz chiqishi uchun Facebook Sahifangizga Instagramni ulang yoki yuqoridagi <strong>"Havola (URL)"</strong> bo'limiga post linkini tashlang.</div>`;
         }
       }
 
@@ -713,6 +718,37 @@ window.openPostPickerModal = async function() {
   } catch (e) {
     if (loading) loading.style.display = 'none';
     if (empty) empty.style.display = 'block';
+  }
+};
+
+window.filterPostPickerGrid = function(query) {
+  const q = (query || '').trim().toLowerCase();
+  const grid = document.getElementById('postPickerGrid');
+  const empty = document.getElementById('postPickerEmpty');
+
+  if (!q) {
+    renderPostPickerGrid(cachedPickerPosts);
+    if (grid) grid.style.display = 'grid';
+    if (empty) empty.style.display = 'none';
+    return;
+  }
+
+  const filtered = cachedPickerPosts.filter(p => {
+    const cap = (p.caption || '').toLowerCase();
+    const id = (p.id || '').toLowerCase();
+    return cap.includes(q) || id.includes(q);
+  });
+
+  if (filtered.length > 0) {
+    renderPostPickerGrid(filtered);
+    if (grid) grid.style.display = 'grid';
+    if (empty) empty.style.display = 'none';
+  } else {
+    if (grid) grid.style.display = 'none';
+    if (empty) {
+      empty.style.display = 'block';
+      empty.innerHTML = `<p style="color: var(--text-muted);">"${escapeHtml(q)}" bo'yicha hech qanday post topilmadi.</p>`;
+    }
   }
 };
 

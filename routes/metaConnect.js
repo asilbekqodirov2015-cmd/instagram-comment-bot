@@ -219,13 +219,46 @@ router.get('/posts', auth, async (req, res) => {
     }
 
     const token = userConfig.pageAccessToken;
-    const targetInstaId = userConfig.instagramAccountId;
+    let targetInstaId = userConfig.instagramAccountId;
     const targetPageId = userConfig.facebookPageId;
 
     let postsFound = [];
 
-    // Strategy 1: Fetch via Instagram Business Account Media API
-    if (targetInstaId && targetInstaId !== targetPageId) {
+    // Strategy 1: Query Facebook Page directly for nested instagram_business_account media
+    if (targetPageId) {
+      try {
+        const pageQueryUrl = `https://graph.facebook.com/v19.0/${targetPageId}?fields=instagram_business_account{id,username,name,media{id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count}},connected_instagram_account{id,username}&access_token=${token}`;
+        const pageRes = await axios.get(pageQueryUrl, { timeout: 10000 });
+        
+        const instaMedia = pageRes.data?.instagram_business_account?.media?.data;
+        if (Array.isArray(instaMedia) && instaMedia.length > 0) {
+          postsFound = instaMedia.map(item => ({
+            id: item.id,
+            caption: item.caption || '(Instagram Reel / Post)',
+            mediaType: item.media_type || 'VIDEO',
+            mediaUrl: item.media_url || '',
+            thumbnailUrl: item.thumbnail_url || item.media_url || '',
+            permalink: item.permalink || `https://instagram.com/p/${item.id}`,
+            likeCount: item.like_count || 0,
+            commentsCount: item.comments_count || 0,
+            timestamp: item.timestamp
+          }));
+        }
+
+        // Update targetInstaId in config if discovered here
+        if (pageRes.data?.instagram_business_account?.id && !userConfig.instagramAccountId) {
+          targetInstaId = pageRes.data.instagram_business_account.id;
+          userConfig.instagramAccountId = targetInstaId;
+          userConfig.instagramUsername = pageRes.data.instagram_business_account.username || userConfig.instagramUsername;
+          await userConfig.save();
+        }
+      } catch (e) {
+        console.warn('Strategy 1 nested media fetch note:', e.response?.data?.error?.message || e.message);
+      }
+    }
+
+    // Strategy 2: Fetch via Instagram Business Account Media API directly
+    if (postsFound.length === 0 && targetInstaId && targetInstaId !== targetPageId) {
       try {
         const mediaUrl = `https://graph.facebook.com/v19.0/${targetInstaId}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=30&access_token=${token}`;
         const mediaRes = await axios.get(mediaUrl, { timeout: 10000 });
@@ -233,9 +266,9 @@ router.get('/posts', auth, async (req, res) => {
         if (Array.isArray(mediaRes.data?.data) && mediaRes.data.data.length > 0) {
           postsFound = mediaRes.data.data.map(item => ({
             id: item.id,
-            caption: item.caption || '(Izohsiz post)',
-            mediaType: item.media_type,
-            mediaUrl: item.media_url,
+            caption: item.caption || '(Instagram Post)',
+            mediaType: item.media_type || 'VIDEO',
+            mediaUrl: item.media_url || '',
             thumbnailUrl: item.thumbnail_url || item.media_url || '',
             permalink: item.permalink || `https://instagram.com/p/${item.id}`,
             likeCount: item.like_count || 0,
@@ -244,20 +277,42 @@ router.get('/posts', auth, async (req, res) => {
           }));
         }
       } catch (e) {
-        console.warn('Strategy 1 insta media fetch failed:', e.response?.data?.error?.message || e.message);
+        console.warn('Strategy 2 insta media fetch note:', e.response?.data?.error?.message || e.message);
       }
     }
 
-    // Strategy 2: Fetch via Facebook Page Feed / Published Posts
+    // Strategy 3: Fetch via Facebook Page Videos
     if (postsFound.length === 0 && targetPageId) {
       try {
-        const pageFeedUrl = `https://graph.facebook.com/v19.0/${targetPageId}/feed?fields=id,message,created_time,full_picture,permalink_url&limit=30&access_token=${token}`;
-        const pageRes = await axios.get(pageFeedUrl, { timeout: 10000 });
+        const videosUrl = `https://graph.facebook.com/v19.0/${targetPageId}/videos?fields=id,description,picture,source,permalink_url,created_time&limit=20&access_token=${token}`;
+        const videosRes = await axios.get(videosUrl, { timeout: 8000 });
 
-        if (Array.isArray(pageRes.data?.data) && pageRes.data.data.length > 0) {
-          postsFound = pageRes.data.data.map(item => ({
+        if (Array.isArray(videosRes.data?.data) && videosRes.data.data.length > 0) {
+          postsFound = videosRes.data.data.map(item => ({
             id: item.id,
-            caption: item.message || '(Facebook post)',
+            caption: item.description || '(Video Reel)',
+            mediaType: 'VIDEO',
+            mediaUrl: item.source || item.picture || '',
+            thumbnailUrl: item.picture || '',
+            permalink: item.permalink_url ? `https://facebook.com${item.permalink_url}` : `https://facebook.com/${item.id}`,
+            likeCount: 0,
+            commentsCount: 0,
+            timestamp: item.created_time
+          }));
+        }
+      } catch (e) {}
+    }
+
+    // Strategy 4: Fetch via Facebook Page Photos & Feed
+    if (postsFound.length === 0 && targetPageId) {
+      try {
+        const feedUrl = `https://graph.facebook.com/v19.0/${targetPageId}/published_posts?fields=id,message,created_time,full_picture,permalink_url&limit=25&access_token=${token}`;
+        const feedRes = await axios.get(feedUrl, { timeout: 8000 });
+
+        if (Array.isArray(feedRes.data?.data) && feedRes.data.data.length > 0) {
+          postsFound = feedRes.data.data.map(item => ({
+            id: item.id,
+            caption: item.message || '(Post / Rasm)',
             mediaType: item.full_picture ? 'IMAGE' : 'TEXT',
             mediaUrl: item.full_picture || '',
             thumbnailUrl: item.full_picture || '',
@@ -267,9 +322,7 @@ router.get('/posts', auth, async (req, res) => {
             timestamp: item.created_time
           }));
         }
-      } catch (e) {
-        console.warn('Strategy 2 page feed fetch failed:', e.response?.data?.error?.message || e.message);
-      }
+      } catch (e) {}
     }
 
     if (postsFound.length > 0) {
@@ -284,7 +337,7 @@ router.get('/posts', auth, async (req, res) => {
     res.json({
       success: true,
       isLive: false,
-      message: 'Sizning hisobingizda ochiq postlar topilmadi. Sinov uchun namuna postlar ko\'rsatilmoqda.',
+      message: 'Sizning Facebook/Instagram profilingizda ochiq postlar topilmadi. Sinov uchun namuna postlar ko\'rsatilmoqda yoki yuqoridagi havola bo\'limidan xohlagan postingizni bog\'lashingiz mumkin.',
       posts: DEMO_POSTS
     });
 
