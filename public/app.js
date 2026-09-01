@@ -11,6 +11,12 @@ let selectedCheckoutPlan = 'pro';
 let selectedCheckoutProvider = 'payme';
 let selectedAdminEditUserId = null;
 
+// Post Picker State
+let selectedTargetMediaId = '';
+let selectedTargetMediaUrl = '';
+let selectedTargetMediaCaption = '';
+let selectedTargetMediaThumbnail = '';
+
 // Verify Auth Token on load
 const token = localStorage.getItem('jwtToken');
 if (!token) {
@@ -212,6 +218,32 @@ async function loadBotConfig() {
       toggleKeywordsVisibility();
     }
 
+    // Post Scope (All vs Specific Post)
+    const postScopeRadios = document.getElementsByName('postScope');
+    if (postScopeRadios) {
+      postScopeRadios.forEach(r => {
+        r.checked = (r.value === (config.postScope || 'all'));
+      });
+      togglePostScopeVisibility();
+    }
+
+    // Mention User (@atmetka) toggle
+    const mentionToggle = document.getElementById('mentionUserToggle');
+    if (mentionToggle) {
+      mentionToggle.checked = (config.mentionUser !== false);
+    }
+
+    // Selected Post Data
+    if (config.targetMediaId) {
+      selectedTargetMediaId = config.targetMediaId;
+      selectedTargetMediaUrl = config.targetMediaUrl || '';
+      selectedTargetMediaCaption = config.targetMediaCaption || '';
+      selectedTargetMediaThumbnail = config.targetMediaThumbnail || '';
+      renderSelectedPostDisplay();
+    } else {
+      clearSelectedPostDisplay();
+    }
+
     // Keywords
     activeKeywords = Array.isArray(config.keywords) ? config.keywords : [];
     renderKeywordBadges();
@@ -254,6 +286,53 @@ async function loadBotConfig() {
   } catch (err) {
     console.error('Error loading config:', err);
   }
+}
+
+// Post Scope visibility toggle
+function togglePostScopeVisibility() {
+  const postScopeRadios = document.getElementsByName('postScope');
+  let selected = 'all';
+  postScopeRadios.forEach(r => { if (r.checked) selected = r.value; });
+
+  const container = document.getElementById('specificPostContainer');
+  if (container) {
+    container.style.display = (selected === 'specific') ? 'block' : 'none';
+  }
+}
+document.querySelectorAll('input[name="postScope"]').forEach(r => {
+  r.addEventListener('change', togglePostScopeVisibility);
+});
+
+// Render Selected Post box
+function renderSelectedPostDisplay() {
+  const displayBox = document.getElementById('selectedPostDisplay');
+  const noPostBox = document.getElementById('noPostSelectedBox');
+  const captionEl = document.getElementById('selectedPostCaption');
+  const idEl = document.getElementById('selectedPostIdText');
+  const thumbEl = document.getElementById('selectedPostThumb');
+
+  if (selectedTargetMediaId) {
+    if (displayBox) displayBox.style.display = 'flex';
+    if (noPostBox) noPostBox.style.display = 'none';
+    if (captionEl) captionEl.textContent = selectedTargetMediaCaption || '(Izohsiz post)';
+    if (idEl) idEl.textContent = `ID: ${selectedTargetMediaId}`;
+    if (thumbEl) {
+      if (selectedTargetMediaThumbnail) {
+        thumbEl.innerHTML = `<img src="${escapeHtml(selectedTargetMediaThumbnail)}" alt="Post Thumb">`;
+      } else {
+        thumbEl.innerHTML = `<i class="fa-solid fa-photo-film"></i>`;
+      }
+    }
+  } else {
+    clearSelectedPostDisplay();
+  }
+}
+
+function clearSelectedPostDisplay() {
+  const displayBox = document.getElementById('selectedPostDisplay');
+  const noPostBox = document.getElementById('noPostSelectedBox');
+  if (displayBox) displayBox.style.display = 'none';
+  if (noPostBox) noPostBox.style.display = 'block';
 }
 
 /* Smart Auto-Connect Handlers */
@@ -357,12 +436,25 @@ if (configForm) {
     let selectedTrigger = 'all';
     triggerTypeRadios.forEach(r => { if (r.checked) selectedTrigger = r.value; });
 
+    let selectedScope = 'all';
+    const scopeRadios = document.getElementsByName('postScope');
+    scopeRadios.forEach(r => { if (r.checked) selectedScope = r.value; });
+
+    const mentionToggle = document.getElementById('mentionUserToggle');
+    const mentionUser = mentionToggle ? mentionToggle.checked : true;
+
     const newConfig = {
       facebookPageId: facebookPageId ? facebookPageId.value.trim() : '',
       pageAccessToken: pageAccessToken ? pageAccessToken.value.trim() : '',
       verifyToken: verifyToken ? verifyToken.value.trim() : '',
+      postScope: selectedScope,
+      targetMediaId: selectedScope === 'specific' ? selectedTargetMediaId : '',
+      targetMediaUrl: selectedScope === 'specific' ? selectedTargetMediaUrl : '',
+      targetMediaCaption: selectedScope === 'specific' ? selectedTargetMediaCaption : '',
+      targetMediaThumbnail: selectedScope === 'specific' ? selectedTargetMediaThumbnail : '',
       triggerType: selectedTrigger,
       keywords: activeKeywords,
+      mentionUser: mentionUser,
       commentReplies: commentReplies.length > 0 ? commentReplies : ['Javobingizni lizingizga (DM) yubordik! 📩'],
       commentReplyText: commentReplies[0] || 'Javobingizni lizingizga (DM) yubordik! 📩',
       dmType: dmTypeSelect ? dmTypeSelect.value : 'text',
@@ -511,16 +603,26 @@ function updateLivePreview() {
   const mockDmText = document.getElementById('mockDmTextContent');
   const mockDmMedia = document.getElementById('mockDmMediaBubble');
   const mockDmMediaPrev = document.getElementById('mockDmMediaPreview');
+  const mentionToggle = document.getElementById('mentionUserToggle');
+  const shouldMention = mentionToggle ? mentionToggle.checked : true;
 
-  // Preview reply
+  // Preview reply with @mention
   const firstReplyInput = replyVariantsContainer ? replyVariantsContainer.querySelector('input') : null;
   if (mockReplyText && firstReplyInput) {
-    mockReplyText.textContent = firstReplyInput.value || 'Javobingizni lizingizga (DM) yubordik! 📩';
+    let rawReply = firstReplyInput.value || 'Javobingizni lizingizga (DM) yubordik! 📩';
+    if (rawReply.includes('{username}')) {
+      rawReply = rawReply.replace(/\{username\}/gi, '@instatester');
+    } else if (shouldMention) {
+      rawReply = `@instatester ${rawReply}`;
+    }
+    mockReplyText.textContent = rawReply;
   }
 
   // Preview DM
   if (mockDmText && dmText) {
-    mockDmText.textContent = dmText.value || 'Salom! Bizga kommentariya qoldirganingiz uchun rahmat.';
+    let rawDm = dmText.value || 'Salom! Bizga kommentariya qoldirganingiz uchun rahmat.';
+    rawDm = rawDm.replace(/\{username\}/gi, 'instatester');
+    mockDmText.textContent = rawDm;
   }
 
   const dmType = dmTypeSelect ? dmTypeSelect.value : 'text';
@@ -541,6 +643,113 @@ function updateLivePreview() {
     }
   }
 }
+
+// Bind mention toggle change
+const mentionToggleEl = document.getElementById('mentionUserToggle');
+if (mentionToggleEl) {
+  mentionToggleEl.addEventListener('change', updateLivePreview);
+}
+
+/* ==========================================================
+   POST / REEL PICKER MODAL ENGINE
+   ========================================================== */
+window.openPostPickerModal = async function() {
+  const modal = document.getElementById('postPickerModal');
+  const loading = document.getElementById('postPickerLoading');
+  const grid = document.getElementById('postPickerGrid');
+  const empty = document.getElementById('postPickerEmpty');
+
+  if (modal) modal.classList.add('open');
+  if (loading) loading.style.display = 'block';
+  if (grid) grid.style.display = 'none';
+  if (empty) empty.style.display = 'none';
+
+  try {
+    const res = await authenticatedFetch('/api/meta/posts');
+    const data = await res.json();
+
+    if (loading) loading.style.display = 'none';
+
+    if (res.ok && data.success && Array.isArray(data.posts) && data.posts.length > 0) {
+      if (grid) {
+        grid.style.display = 'grid';
+        renderPostPickerGrid(data.posts);
+      }
+    } else {
+      if (empty) empty.style.display = 'block';
+    }
+  } catch (e) {
+    if (loading) loading.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+  }
+};
+
+window.closePostPickerModal = function() {
+  const modal = document.getElementById('postPickerModal');
+  if (modal) modal.classList.remove('open');
+};
+
+function renderPostPickerGrid(posts) {
+  const grid = document.getElementById('postPickerGrid');
+  if (!grid) return;
+
+  grid.innerHTML = posts.map(p => {
+    const isVideo = p.mediaType === 'VIDEO';
+    const typeIcon = isVideo ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-image"></i>';
+    const thumb = p.thumbnailUrl || p.mediaUrl;
+    const postDataEscaped = encodeURIComponent(JSON.stringify(p));
+
+    return `
+      <div class="insta-post-card" onclick="selectPostFromPicker('${postDataEscaped}')">
+        <div class="insta-post-thumb-box">
+          <img src="${escapeHtml(thumb)}" alt="Post Thumbnail" onerror="this.src=''; this.parentElement.innerHTML='<div style=\\'display:flex;height:100%;align-items:center;justify-content:center;color:#666;font-size:2rem;\\'>🎬</div>';">
+          <div class="insta-post-type-icon">${typeIcon}</div>
+        </div>
+        <div class="insta-post-body">
+          <div class="insta-post-caption">${escapeHtml(p.caption)}</div>
+          <div class="insta-post-metrics">
+            <span><i class="fa-regular fa-heart"></i> ${p.likeCount || 0}</span>
+            <span><i class="fa-regular fa-comment"></i> ${p.commentsCount || 0}</span>
+          </div>
+          <button type="button" class="btn btn-primary btn-small btn-select-post">
+            <i class="fa-solid fa-check"></i> Tanlash
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.selectPostFromPicker = function(encodedPostData) {
+  try {
+    const p = JSON.parse(decodeURIComponent(encodedPostData));
+    selectedTargetMediaId = p.id;
+    selectedTargetMediaUrl = p.permalink || '';
+    selectedTargetMediaCaption = p.caption || '(Izohsiz post)';
+    selectedTargetMediaThumbnail = p.thumbnailUrl || p.mediaUrl || '';
+
+    renderSelectedPostDisplay();
+    closePostPickerModal();
+    alert(`✅ Post muvaffaqiyatli tanlandi!\nID: ${p.id}`);
+  } catch (e) {
+    console.error('Error selecting post:', e);
+  }
+};
+
+window.selectManualPost = function() {
+  const val = document.getElementById('manualPostIdInput').value.trim();
+  if (!val) {
+    alert('Iltimos, Post ID-ni kiriting!');
+    return;
+  }
+  selectedTargetMediaId = val;
+  selectedTargetMediaUrl = '';
+  selectedTargetMediaCaption = `Qo'lda kiritilgan Post (ID: ${val})`;
+  selectedTargetMediaThumbnail = '';
+
+  renderSelectedPostDisplay();
+  closePostPickerModal();
+};
 
 // Local simulation tester
 const triggerTestBtn = document.getElementById('triggerTestBtn');

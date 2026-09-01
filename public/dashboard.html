@@ -263,6 +263,46 @@
                 </div>
                 
                 <div class="card-body">
+                  <!-- Post / Video Scope Selection -->
+                  <div class="form-group">
+                    <label>Qaysi Post yoki Videolarga Javob Berilsin?</label>
+                    <div class="radio-group">
+                      <label class="radio-label">
+                        <input type="radio" name="postScope" value="all" checked>
+                        <span class="radio-custom"></span>
+                        <span class="radio-text">Barcha Post va Reels-larga</span>
+                      </label>
+                      <label class="radio-label">
+                        <input type="radio" name="postScope" value="specific">
+                        <span class="radio-custom"></span>
+                        <span class="radio-text">Faqat Belgilangan Post yoki Reel-ga</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Specific Post Selector Box -->
+                  <div class="form-group" id="specificPostContainer" style="display: none;">
+                    <div class="selected-post-card" id="selectedPostDisplay" style="display: none;">
+                      <div class="post-thumb-wrapper" id="selectedPostThumb"></div>
+                      <div class="post-info-wrapper">
+                        <span class="badge-tag">Tanlangan Post / Reel</span>
+                        <h4 id="selectedPostCaption">Post matni...</h4>
+                        <p class="post-id-tag" id="selectedPostIdText">ID: 1784...</p>
+                      </div>
+                      <button type="button" class="btn btn-secondary btn-small" onclick="openPostPickerModal()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Almashtirish
+                      </button>
+                    </div>
+
+                    <div id="noPostSelectedBox">
+                      <p class="input-hint">Profilingizdagi qaysi video yoki rasm ostidagi kommentlarga javob berishni tanlang:</p>
+                      <button type="button" class="btn btn-secondary btn-large" onclick="openPostPickerModal()" style="width: 100%; border: 1px dashed var(--primary); color: #fff;">
+                        <i class="fa-solid fa-photo-film" style="color: var(--primary);"></i> 📸 Instagramdan Post / Reel Tanlash
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Trigger Condition -->
                   <div class="form-group">
                     <label>Qachon ishga tushsin?</label>
                     <div class="radio-group">
@@ -286,6 +326,21 @@
                       <input type="text" id="keywordsInput" placeholder="E.g. narx, link, buyurtma, info">
                     </div>
                     <div id="keywordsBadges" class="badges-container"></div>
+                  </div>
+
+                  <!-- User Atmetka / Mention Setting -->
+                  <div class="form-group">
+                    <label>Foydalanuvchiga @atmetka qilish</label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 0.85rem 1rem;">
+                      <div>
+                        <strong>Kommentga javobda @username ni belgilash</strong>
+                        <p class="input-hint" style="margin: 0.2rem 0 0 0;">Har bir javob boshiga <code>@foydalanuvchi</code> avtomatik qo'shiladi (yoki matnda <code>{username}</code> ishlating).</p>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="mentionUserToggle" checked>
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
                   </div>
 
                   <!-- Random Multi-Replies -->
@@ -1021,6 +1076,38 @@
           </button>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       INSTAGRAM POST / REEL PICKER MODAL
+       ======================================================== -->
+  <div class="modal-overlay" id="postPickerModal">
+    <div class="modal-card" style="max-width: 760px; max-height: 85vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-photo-film" style="color: #ff1361;"></i> Profilingizdagi Post yoki Reel-ni Tanlang</h3>
+        <button class="modal-close-btn" onclick="closePostPickerModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="test-desc">Bot aynan qaysi video yoki rasmingiz ostidagi izohlarga javob qaytarishini tanlang:</p>
+        
+        <div id="postPickerLoading" style="text-align: center; padding: 2rem; color: #00f2fe;">
+          <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+          <p style="margin-top: 0.5rem;">Instagramdan postlaringiz yuklanmoqda...</p>
+        </div>
+
+        <div id="postPickerGrid" class="instagram-posts-grid" style="display: none;"></div>
+
+        <div id="postPickerEmpty" style="display: none; text-align: center; padding: 2rem;">
+          <p style="color: var(--text-muted);">Hech qanday post topilmadi yoki token ruxsati yetarli emas.</p>
+          <div class="form-group" style="max-width: 400px; margin: 1rem auto 0 auto;">
+            <label>Post ID yoki URL-ni qo'lda kiritish:</label>
+            <input type="text" id="manualPostIdInput" placeholder="Masalan: 178414002345678">
+            <button type="button" class="btn btn-primary" onclick="selectManualPost()" style="margin-top: 0.5rem; width: 100%;">Tanlash</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

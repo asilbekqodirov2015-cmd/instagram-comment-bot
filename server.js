@@ -297,6 +297,77 @@ app.post('/api/logs/clear', auth, async (req, res) => {
   }
 });
 
+// Local test simulation trigger
+app.post('/api/test-trigger', auth, async (req, res) => {
+  try {
+    const { username, comment, mediaId } = req.body;
+    const config = await getConfiguration(req.user.id);
+
+    // Check post scope if mediaId is provided
+    if (config.postScope === 'specific' && config.targetMediaId && mediaId && mediaId !== config.targetMediaId) {
+      return res.status(400).json({
+        success: false,
+        message: `Ushbu post/video bot tomonidan kuzatilmayapti. Bot faqat tanlangan postga (${config.targetMediaCaption || config.targetMediaId}) javob berishga sozlangan.`
+      });
+    }
+
+    // Check keywords
+    let matches = false;
+    if (config.triggerType === 'all') {
+      matches = true;
+    } else if (config.triggerType === 'keywords') {
+      const lower = (comment || '').toLowerCase();
+      matches = (config.keywords || []).some(kw => kw && lower.includes(kw.trim().toLowerCase()));
+    }
+
+    if (!matches) {
+      return res.status(400).json({
+        success: false,
+        message: `Komment kalit so'zlarga to'g'ri kelmadi. Kalit so'zlar: [${(config.keywords || []).join(', ')}]`
+      });
+    }
+
+    // Format reply with mention
+    const replies = config.commentReplies && config.commentReplies.length > 0 
+      ? config.commentReplies 
+      : [config.commentReplyText || 'Javobingizni lizingizga (DM) yubordik! 📩'];
+    const selectedReply = replies[Math.floor(Math.random() * replies.length)];
+
+    let formattedReply = selectedReply;
+    if (formattedReply.includes('{username}')) {
+      formattedReply = formattedReply.replace(/\{username\}/gi, `@${username}`);
+    } else if (config.mentionUser !== false && username) {
+      formattedReply = `@${username} ${formattedReply}`;
+    }
+
+    // Format DM
+    const formattedDm = (config.dmText || '').replace(/\{username\}/gi, username);
+
+    // Write test log
+    await writeLogEntry(req.user.id, {
+      commenterUsername: username,
+      commenterId: 'test_user_123',
+      commentText: comment,
+      commentId: 'test_cmt_' + Date.now(),
+      mediaId: mediaId || config.targetMediaId || 'test_media_123',
+      replyText: formattedReply,
+      dmText: formattedDm,
+      dmType: config.dmType || 'text',
+      replyStatus: 'success',
+      dmStatus: 'success'
+    });
+
+    res.json({
+      success: true,
+      message: 'Test simulyatsiyasi muvaffaqiyatli yakunlandi! Kommentga @atmetka bilan javob berildi va DM yuborildi.',
+      reply: formattedReply,
+      dm: formattedDm
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Test xatoligi: ' + err.message });
+  }
+});
+
 // --- WEBHOOK ROUTES (SaaS Dynamic Routing) ---
 
 // GET: Webhook Verification (Checks against App Master verify token)
@@ -371,7 +442,15 @@ app.post('/webhook', async (req, res) => {
             continue;
           }
 
-          console.log(`[USER ${activeUserId}] Processing comment from @${commenterUsername}: "${commentText}"`);
+          // 0. Post / Video Scope Check (Specific Post or All Posts)
+          if (config.postScope === 'specific' && config.targetMediaId) {
+            if (mediaId && mediaId !== 'Noma\'lum' && mediaId !== config.targetMediaId) {
+              console.log(`[USER ${activeUserId}] Comment on media ${mediaId} does not match target media ${config.targetMediaId}. Skipping.`);
+              continue;
+            }
+          }
+
+          console.log(`[USER ${activeUserId}] Processing comment from @${commenterUsername} on media ${mediaId}: "${commentText}"`);
 
           // 1. Keyword check
           let matchesFilter = false;
@@ -379,7 +458,7 @@ app.post('/webhook', async (req, res) => {
             matchesFilter = true;
           } else if (config.triggerType === 'keywords') {
             const lowerComment = commentText.toLowerCase();
-            matchesFilter = config.keywords.some(keyword => {
+            matchesFilter = (config.keywords || []).some(keyword => {
               if (!keyword) return false;
               return lowerComment.includes(keyword.trim().toLowerCase());
             });
@@ -412,7 +491,7 @@ app.post('/webhook', async (req, res) => {
             continue;
           }
 
-          // 2. Publish comment reply (Support Random Comment Replies)
+          // 2. Publish comment reply with @mention and {username} support
           let replySuccess = false;
           try {
             const replies = config.commentReplies && config.commentReplies.length > 0 
@@ -421,11 +500,19 @@ app.post('/webhook', async (req, res) => {
             
             const selectedReply = replies[Math.floor(Math.random() * replies.length)];
 
-            if (selectedReply && selectedReply.trim()) {
-              await postCommentReply(commentId, selectedReply, pageAccessToken);
+            let formattedReply = selectedReply;
+            if (formattedReply.includes('{username}')) {
+              formattedReply = formattedReply.replace(/\{username\}/gi, `@${commenterUsername}`);
+            } else if (config.mentionUser !== false && commenterUsername && commenterUsername !== "Noma'lum") {
+              formattedReply = `@${commenterUsername} ${formattedReply}`;
+            }
+
+            if (formattedReply && formattedReply.trim()) {
+              await postCommentReply(commentId, formattedReply, pageAccessToken);
               logEntry.replyStatus = 'success';
+              logEntry.replyText = formattedReply;
               replySuccess = true;
-              console.log(`[USER ${activeUserId}] Replied to ${commentId} with: "${selectedReply}"`);
+              console.log(`[USER ${activeUserId}] Replied to ${commentId} with: "${formattedReply}"`);
             } else {
               logEntry.replyStatus = 'skipped (matn bo\'sh)';
             }
@@ -436,9 +523,10 @@ app.post('/webhook', async (req, res) => {
             logEntry.error = `Comment reply error: ${apiErr}`;
           }
 
-          // 3. Send DM (Direct Message)
+          // 3. Send DM (Direct Message) with {username} placeholder replacement
           try {
             const recipient = { comment_id: commentId };
+            const formattedDmText = (config.dmText || '').replace(/\{username\}/gi, commenterUsername || 'do\'stimiz');
 
             if (config.dmType === 'text') {
               await sendMetaMessage(recipient, { text: config.dmText }, pageAccessToken);

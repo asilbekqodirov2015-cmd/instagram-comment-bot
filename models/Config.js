@@ -31,6 +31,29 @@ const ConfigSchema = new mongoose.Schema({
   lastConnectedAt: {
     type: Date
   },
+  // Scope of Target Posts / Reels
+  postScope: {
+    type: String,
+    enum: ['all', 'specific'],
+    default: 'all'
+  },
+  targetMediaId: {
+    type: String,
+    default: ''
+  },
+  targetMediaUrl: {
+    type: String,
+    default: ''
+  },
+  targetMediaCaption: {
+    type: String,
+    default: ''
+  },
+  targetMediaThumbnail: {
+    type: String,
+    default: ''
+  },
+  // Comment Trigger Settings
   triggerType: {
     type: String,
     enum: ['all', 'keywords'],
@@ -39,6 +62,11 @@ const ConfigSchema = new mongoose.Schema({
   keywords: {
     type: [String],
     default: []
+  },
+  // Atmetka / Mention commenter (@username)
+  mentionUser: {
+    type: Boolean,
+    default: true
   },
   commentReplyText: {
     type: String,

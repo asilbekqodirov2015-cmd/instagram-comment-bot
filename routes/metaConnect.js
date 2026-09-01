@@ -43,7 +43,6 @@ router.post('/auto-resolve', auth, async (req, res) => {
 
     // Check if token returned pages list (User Token case)
     if (data.accounts && data.accounts.data && data.accounts.data.length > 0) {
-      // Find a page with instagram_business_account or pick the first page
       const pageWithInsta = data.accounts.data.find(p => p.instagram_business_account) || data.accounts.data[0];
       targetPageId = pageWithInsta.id;
       targetPageName = pageWithInsta.name;
@@ -102,7 +101,6 @@ router.post('/auto-resolve', auth, async (req, res) => {
       }
     } catch (subErr) {
       console.warn('Webhook auto-subscription attempt:', subErr.response?.data?.error?.message || subErr.message);
-      // Even if subscription fails due to app permissions, we still save the credentials!
     }
 
     // 3. Save resolved configuration into user DB
@@ -144,6 +142,68 @@ router.post('/auto-resolve', auth, async (req, res) => {
 });
 
 /**
+ * GET /api/meta/posts
+ * Fetches recent Instagram Posts / Reels from Meta Graph API for post-specific trigger selection.
+ */
+router.get('/posts', auth, async (req, res) => {
+  try {
+    const userConfig = await Config.findOne({ userId: req.user.id });
+    if (!userConfig || !userConfig.pageAccessToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Avval Instagram sahifangizni bog\'lang (Token topilmadi).'
+      });
+    }
+
+    const token = userConfig.pageAccessToken;
+    let targetInstaId = userConfig.instagramAccountId;
+
+    // If instagramAccountId wasn't saved, fetch it from Page ID
+    if (!targetInstaId && userConfig.facebookPageId) {
+      try {
+        const pageRes = await axios.get(`https://graph.facebook.com/v19.0/${userConfig.facebookPageId}?fields=instagram_business_account&access_token=${token}`);
+        targetInstaId = pageRes.data?.instagram_business_account?.id;
+      } catch (e) {}
+    }
+
+    if (!targetInstaId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Instagram Biznes hisob ID-si topilmadi. Sahifangizga Instagram ulanganligini tekshiring.'
+      });
+    }
+
+    // Query Instagram Graph API for recent media (Photos, Videos, Reels)
+    const mediaUrl = `https://graph.facebook.com/v19.0/${targetInstaId}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=24&access_token=${token}`;
+    const mediaRes = await axios.get(mediaUrl, { timeout: 15000 });
+
+    const posts = (mediaRes.data?.data || []).map(item => ({
+      id: item.id,
+      caption: item.caption || '(Izohsiz post)',
+      mediaType: item.media_type,
+      mediaUrl: item.media_url,
+      thumbnailUrl: item.thumbnail_url || item.media_url || '',
+      permalink: item.permalink || `https://instagram.com/p/${item.id}`,
+      likeCount: item.like_count || 0,
+      commentsCount: item.comments_count || 0,
+      timestamp: item.timestamp
+    }));
+
+    res.json({
+      success: true,
+      posts
+    });
+  } catch (error) {
+    console.error('Error fetching Instagram posts:', error.response?.data || error.message);
+    const errMsg = error.response?.data?.error?.message || error.message;
+    res.status(500).json({
+      success: false,
+      message: 'Postlarni yuklashda xatolik: ' + errMsg
+    });
+  }
+});
+
+/**
  * POST /api/meta/disconnect
  * Disconnects the current Instagram / Facebook page.
  */
@@ -157,6 +217,10 @@ router.post('/disconnect', auth, async (req, res) => {
       userConfig.instagramAccountId = '';
       userConfig.instagramUsername = '';
       userConfig.isConnected = false;
+      userConfig.targetMediaId = '';
+      userConfig.targetMediaUrl = '';
+      userConfig.targetMediaCaption = '';
+      userConfig.targetMediaThumbnail = '';
       await userConfig.save();
     }
 
