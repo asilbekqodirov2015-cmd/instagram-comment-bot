@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadUserProfile();
 
   // Load initial Tab data
+  initAutoConnectHandlers();
   await loadBotConfig();
   await loadStats();
   await loadLogs();
@@ -232,10 +233,111 @@ async function loadBotConfig() {
     if (aiTone) aiTone.value = config.aiTone || 'friendly';
     if (aiPrompt) aiPrompt.value = config.aiSystemPrompt || '';
 
+    // Smart Auto-Connect Banner State
+    const connBanner = document.getElementById('connectedAccountBanner');
+    const wizardBox = document.getElementById('connectWizardBox');
+    const handleEl = document.getElementById('connectedInstaHandle');
+    const pageTitleEl = document.getElementById('connectedPageTitle');
+
+    if (config.isConnected || config.facebookPageId) {
+      if (connBanner) connBanner.style.display = 'flex';
+      if (wizardBox) wizardBox.style.display = 'none';
+      if (handleEl) handleEl.textContent = config.instagramUsername ? `@${config.instagramUsername}` : (config.pageName ? `@${config.pageName}` : '@instagram_akkaunt');
+      if (pageTitleEl) pageTitleEl.textContent = `Facebook Sahifa: ${config.pageName || 'Ulangan Sahifa'} (ID: ${config.facebookPageId})`;
+    } else {
+      if (connBanner) connBanner.style.display = 'none';
+      if (wizardBox) wizardBox.style.display = 'block';
+    }
+
     handleDmTypeChange();
     updateLivePreview();
   } catch (err) {
     console.error('Error loading config:', err);
+  }
+}
+
+/* Smart Auto-Connect Handlers */
+function initAutoConnectHandlers() {
+  const autoResolveBtn = document.getElementById('autoResolveBtn');
+  const autoTokenInput = document.getElementById('autoResolveTokenInput');
+  const statusLog = document.getElementById('autoResolveStatusLog');
+  const disconnectBtn = document.getElementById('disconnectMetaBtn');
+  const toggleManualBtn = document.getElementById('toggleManualSettingsBtn');
+  const manualCollapse = document.getElementById('manualSettingsCollapse');
+
+  if (toggleManualBtn && manualCollapse) {
+    toggleManualBtn.addEventListener('click', () => {
+      const isHidden = manualCollapse.style.display === 'none';
+      manualCollapse.style.display = isHidden ? 'block' : 'none';
+      toggleManualBtn.innerHTML = isHidden 
+        ? '<i class="fa-solid fa-chevron-up"></i> Qo\'lda Sozlamalarni Yashirish' 
+        : '<i class="fa-solid fa-sliders"></i> Qo\'lda Kiritish (Kengaytirilgan)';
+    });
+  }
+
+  if (autoResolveBtn) {
+    autoResolveBtn.addEventListener('click', async () => {
+      const tokenVal = autoTokenInput ? autoTokenInput.value.trim() : '';
+      if (!tokenVal) {
+        alert('Iltimos, Meta Access Tokenni kiriting!');
+        return;
+      }
+
+      autoResolveBtn.disabled = true;
+      autoResolveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Avtomatik aniqlanmoqda...';
+
+      if (statusLog) {
+        statusLog.style.display = 'block';
+        statusLog.className = 'resolve-status-log loading';
+        statusLog.innerHTML = '<i class="fa-solid fa-magnifying-glass fa-spin"></i> 1. Meta API orqali Facebook Sahifa va Instagram akkaunt tekshirilmoqda...';
+      }
+
+      try {
+        const res = await authenticatedFetch('/api/meta/auto-resolve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: tokenVal })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          if (statusLog) {
+            statusLog.className = 'resolve-status-log success';
+            statusLog.innerHTML = `<strong>✅ 100% Muvaffaqiyatli!</strong><br>Instagram: <strong>@${escapeHtml(data.details.instagramUsername || 'instagram_user')}</strong><br>Sahifa: <strong>${escapeHtml(data.details.pageName)}</strong> (ID: ${escapeHtml(data.details.pageId)})<br>⚡ Webhook obunasi: <strong>Avtomatik yoqildi</strong>`;
+          }
+          if (autoTokenInput) autoTokenInput.value = '';
+          await loadBotConfig();
+        } else {
+          if (statusLog) {
+            statusLog.className = 'resolve-status-log error';
+            statusLog.innerHTML = `<strong>❌ Xatolik:</strong> ${escapeHtml(data.message || 'Token yaroqsiz')}`;
+          }
+        }
+      } catch (err) {
+        if (statusLog) {
+          statusLog.className = 'resolve-status-log error';
+          statusLog.innerHTML = '<strong>❌ Tarmoq xatoligi:</strong> Server bilan aloqa o\'rnatilmadi.';
+        }
+      } finally {
+        autoResolveBtn.disabled = false;
+        autoResolveBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> 🚀 Avtomatik Bog\'lash va Ishga Tushirish';
+      }
+    });
+  }
+
+  if (disconnectBtn) {
+    disconnectBtn.addEventListener('click', async () => {
+      if (!confirm('Haqiqatan ham Instagram akkauntingizni tizimdan uzmoqchimisiz?')) return;
+      try {
+        const res = await authenticatedFetch('/api/meta/disconnect', { method: 'POST' });
+        if (res.ok) {
+          alert('Instagram akkaunt muvaffaqiyatli uzildi.');
+          await loadBotConfig();
+        }
+      } catch (e) {
+        alert('Akkauntni uzishda xatolik.');
+      }
+    });
   }
 }
 

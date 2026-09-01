@@ -16,6 +16,7 @@ const auth = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const billingRoutes = require('./routes/billing');
 const adminRoutes = require('./routes/admin');
+const metaConnectRoutes = require('./routes/metaConnect');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authRoutes);
 app.use('/api/billing', auth, billingRoutes);
 app.use('/api/admin', auth, adminRoutes);
+app.use('/api/meta', auth, metaConnectRoutes);
 
 const CONFIG_PATH = path.join(__dirname, 'config.json');
 const LOGS_PATH = path.join(__dirname, 'logs.json');

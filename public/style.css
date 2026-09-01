@@ -2928,4 +2928,136 @@ input:checked + .toggle-slider:before {
   font-size: 0.75rem;
 }
 
+/* ==========================================================
+   SMART AUTO-CONNECT & CONNECTED BANNER STYLES
+   ========================================================== */
+
+.auto-connect-card {
+  border: 1px solid rgba(0, 242, 254, 0.35) !important;
+  box-shadow: 0 10px 30px rgba(0, 242, 254, 0.1) !important;
+}
+
+.connected-account-box {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 78, 59, 0.25) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+}
+
+.conn-icon-pulse {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ec4899, #f43f5e, #fb923c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4);
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.conn-details {
+  flex: 1;
+}
+
+.conn-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.conn-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.conn-details h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.conn-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0.2rem 0 0.6rem 0;
+}
+
+.conn-badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.conn-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.conn-badge.green {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.conn-badge.blue {
+  background: rgba(0, 242, 254, 0.2);
+  color: #00f2fe;
+  border: 1px solid rgba(0, 242, 254, 0.4);
+}
+
+.resolve-status-log {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-glass);
+}
+
+.resolve-status-log.loading {
+  color: #00f2fe;
+  border-color: rgba(0, 242, 254, 0.3);
+}
+
+.resolve-status-log.success {
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.resolve-status-log.error {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.manual-settings-toggle-row {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+
+
 

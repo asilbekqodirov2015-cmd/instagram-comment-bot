@@ -154,49 +154,104 @@
           <div class="settings-column">
             <form id="configForm" class="settings-form">
               
-              <!-- Meta API Card -->
-              <div class="glass-card">
+              <!-- Smart 1-Click Meta Auto Connect Card -->
+              <div class="glass-card auto-connect-card">
                 <div class="card-header">
-                  <i class="fa-solid fa-key header-icon"></i>
-                  <h2>Meta API Sozlamalari</h2>
+                  <i class="fa-solid fa-wand-magic-sparkles header-icon" style="color: #00f2fe;"></i>
+                  <h2>⚡ Tezkor Avtomatik Ulash (1-Bosishda)</h2>
                 </div>
                 
                 <div class="card-body">
-                  <div class="form-group">
-                    <label for="facebookPageId">
-                      Facebook Page ID
-                      <span class="tooltip" data-tooltip="SaaS Webhook yo'naltirishi ishlashi uchun bot bog'langan Facebook Sahifangizning raqamli ID-si."><i class="fa-solid fa-circle-info"></i></span>
-                    </label>
-                    <div class="input-with-icon">
-                      <i class="fa-solid fa-hashtag input-icon"></i>
-                      <input type="text" id="facebookPageId" name="facebookPageId" placeholder="E.g. 102938475610293" required>
+                  <!-- Connected Banner (Shown when connected) -->
+                  <div id="connectedAccountBanner" class="connected-account-box" style="display: none;">
+                    <div class="conn-icon-pulse"><i class="fa-brands fa-instagram"></i></div>
+                    <div class="conn-details">
+                      <div class="conn-title-row">
+                        <span class="conn-status-dot"></span>
+                        <h3 id="connectedInstaHandle">@instagram_user</h3>
+                      </div>
+                      <p id="connectedPageTitle" class="conn-sub">Facebook Sahifa: Biznes Sahifasi (ID: 102938475)</p>
+                      <div class="conn-badges">
+                        <span class="conn-badge green"><i class="fa-solid fa-check"></i> Webhook Faol</span>
+                        <span class="conn-badge blue"><i class="fa-solid fa-bolt"></i> 24/7 Avto-Javob</span>
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-small" id="disconnectMetaBtn" title="Akkauntni uzish">
+                      <i class="fa-solid fa-link-slash"></i> Uzish
+                    </button>
+                  </div>
+
+                  <!-- Not Connected Wizard Form -->
+                  <div id="connectWizardBox">
+                    <p class="test-desc">
+                      Meta-dan olgan <strong>bitta tokenni</strong> kiriting. Tizim <strong>Facebook Page ID, Instagram ID</strong> va <strong>Webhook obunasini</strong> 1 soniyada o'zi avtomatik aniqlaydi va ishga tushiradi!
+                    </p>
+
+                    <div class="form-group">
+                      <label for="autoResolveTokenInput">Meta Access Token</label>
+                      <div class="input-with-icon">
+                        <i class="fa-solid fa-key input-icon"></i>
+                        <input type="password" id="autoResolveTokenInput" placeholder="EAABw2... (Tokenni shu yerga tashlang)">
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('autoResolveTokenInput')">
+                          <i class="fa-solid fa-eye" id="autoResolveTokenInput-eye"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="auto-connect-actions">
+                      <button type="button" class="btn btn-accent btn-large" id="autoResolveBtn" style="width: 100%;">
+                        <i class="fa-solid fa-bolt"></i> 🚀 Avtomatik Bog'lash va Ishga Tushirish
+                      </button>
+                    </div>
+
+                    <div id="autoResolveStatusLog" class="resolve-status-log" style="display: none;"></div>
+                  </div>
+
+                  <!-- Manual Advanced Settings Toggle -->
+                  <div class="manual-settings-toggle-row">
+                    <button type="button" class="btn-link" id="toggleManualSettingsBtn">
+                      <i class="fa-solid fa-sliders"></i> Qo'lda Kiritish (Kengaytirilgan)
+                    </button>
+                  </div>
+
+                  <div id="manualSettingsCollapse" style="display: none; margin-top: 1rem; border-top: 1px dashed var(--border-glass); padding-top: 1rem;">
+                    <div class="form-group">
+                      <label for="facebookPageId">
+                        Facebook Page ID
+                        <span class="tooltip" data-tooltip="SaaS Webhook yo'naltirishi ishlashi uchun bot bog'langan Facebook Sahifangizning raqamli ID-si."><i class="fa-solid fa-circle-info"></i></span>
+                      </label>
+                      <div class="input-with-icon">
+                        <i class="fa-solid fa-hashtag input-icon"></i>
+                        <input type="text" id="facebookPageId" name="facebookPageId" placeholder="E.g. 102938475610293">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="pageAccessToken">
+                        Page Access Token 
+                        <span class="tooltip" data-tooltip="Meta Developer panelidan olingan maxfiy token."><i class="fa-solid fa-circle-info"></i></span>
+                      </label>
+                      <div class="input-with-icon">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="pageAccessToken" name="pageAccessToken" placeholder="E.g. EAABw2... (yashirin)" autocomplete="off">
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('pageAccessToken')">
+                          <i class="fa-solid fa-eye" id="pageAccessToken-eye"></i>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="verifyToken">
+                        Webhook Verify Token
+                        <span class="tooltip" data-tooltip="Meta Webhook sozlamasiga kiritiladigan maxfiy so'z."><i class="fa-solid fa-circle-info"></i></span>
+                      </label>
+                      <div class="input-with-icon">
+                        <i class="fa-solid fa-shield-halved input-icon"></i>
+                        <input type="text" id="verifyToken" name="verifyToken" placeholder="E.g. instagram_bot_secret_token_2026">
+                      </div>
                     </div>
                   </div>
 
-                  <div class="form-group">
-                    <label for="pageAccessToken">
-                      Page Access Token 
-                      <span class="tooltip" data-tooltip="Meta Developer panelidan olingan maxfiy token."><i class="fa-solid fa-circle-info"></i></span>
-                    </label>
-                    <div class="input-with-icon">
-                      <i class="fa-solid fa-lock input-icon"></i>
-                      <input type="password" id="pageAccessToken" name="pageAccessToken" placeholder="E.g. EAABw2... (yashirin)" required autocomplete="off">
-                      <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('pageAccessToken')">
-                        <i class="fa-solid fa-eye" id="pageAccessToken-eye"></i>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="verifyToken">
-                      Webhook Verify Token
-                      <span class="tooltip" data-tooltip="Meta Webhook sozlamasiga kiritiladigan maxfiy so'z."><i class="fa-solid fa-circle-info"></i></span>
-                    </label>
-                    <div class="input-with-icon">
-                      <i class="fa-solid fa-shield-halved input-icon"></i>
-                      <input type="text" id="verifyToken" name="verifyToken" placeholder="E.g. instagram_bot_secret_token_2026" required>
-                    </div>
-                  </div>
                 </div>
               </div>
 

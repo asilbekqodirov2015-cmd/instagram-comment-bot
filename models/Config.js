@@ -12,6 +12,25 @@ const ConfigSchema = new mongoose.Schema({
     default: '',
     index: true
   },
+  pageName: {
+    type: String,
+    default: ''
+  },
+  instagramAccountId: {
+    type: String,
+    default: ''
+  },
+  instagramUsername: {
+    type: String,
+    default: ''
+  },
+  isConnected: {
+    type: Boolean,
+    default: false
+  },
+  lastConnectedAt: {
+    type: Date
+  },
   triggerType: {
     type: String,
     enum: ['all', 'keywords'],
